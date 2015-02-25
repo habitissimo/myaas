@@ -1,0 +1,4 @@
+fabric >= 1.8.3
+paramiko >= 1.10.1
+requests
+python-dotenv

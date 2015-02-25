@@ -1,0 +1,8 @@
+flake8
+nose
+rednose
+ipython
+ipdb
+ipdbplugin
+unittest2
+mock >= 1.0.1
