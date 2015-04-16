@@ -58,6 +58,10 @@ class AbstractDatabase(metaclass=ABCMeta):
         return settings.HOSTNAME
 
     @property
+    def restart_policy(self):
+        return {"MaximumRetryCount": 0, "Name": "always"}
+
+    @property
     @abstractmethod
     def internal_port(self):
         pass
@@ -104,7 +108,8 @@ class AbstractDatabase(metaclass=ABCMeta):
     def start(self):
         self.client.start(self.container,
                           binds=self._get_volumes_bindings(),
-                          port_bindings=self._get_port_bindings())
+                          port_bindings=self._get_port_bindings(),
+                          restart_policy=self.restart_policy)
 
     def stop(self):
         self.client.stop(self.container)
