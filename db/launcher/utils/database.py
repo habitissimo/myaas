@@ -1,5 +1,5 @@
 import docker
-import shutil
+from subprocess import call
 
 from .container import find_container, list_containers, client
 from .. import settings
@@ -30,7 +30,9 @@ def database_from_template(template, name):
     if template_db.running():
         template_db.stop()
     database = MysqlDatabase(client, '%s-%s' % (template, name))
-    shutil.copytree(template_db.datadir_launcher, database.datadir_launcher)
+    # reflink=auto will use copy on write if supported
+    call(["cp", "-r", "--reflink=auto",
+         template_db.datadir_launcher, database.datadir_launcher])
     return database
 
 
