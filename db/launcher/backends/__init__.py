@@ -2,6 +2,11 @@ from abc import ABCMeta, abstractmethod
 import time
 import os
 import shutil
+import socket
+import docker
+import logging
+
+logger = logging.getLogger(__name__)
 
 from .. import settings
 from ..utils.container import find_container
@@ -96,7 +101,8 @@ class AbstractDatabase(metaclass=ABCMeta):
             environment=self.environment,
             mem_limit=self.mem_limit,
             ports=[self.internal_port],
-            volumes=self._get_volumes_definition())
+            volumes=[self.datadir_database],
+            host_config=self._get_host_config_definition())
 
     @abstractmethod
     def test_connection(self, timeout=1):
@@ -106,10 +112,7 @@ class AbstractDatabase(metaclass=ABCMeta):
             raise Exception("Could not find host for connection")
 
     def start(self):
-        self.client.start(self.container,
-                          binds=self._get_volumes_bindings(),
-                          port_bindings=self._get_port_bindings(),
-                          restart_policy=self.restart_policy)
+        self.client.start(self.container)
 
     def stop(self):
         self.client.stop(self.container)
@@ -149,10 +152,20 @@ class AbstractDatabase(metaclass=ABCMeta):
     def _get_volumes_definition(self):
         return [self.datadir_database]
 
-    def _get_volumes_bindings(self):
-        return {
-            self.datadir_host: {'bind': self.datadir_database, 'ro': False}
-        }
+    def _get_host_config_definition(self):
+        "create host_config object with permanent port mapping"
+        host_config = docker.utils.create_host_config(
+            port_bindings={
+                self.internal_port: self._get_free_port(),
+            },
+            binds={
+                self.datadir_host: {'bind': self.datadir_database, 'ro': False}
+            },
+            restart_policy=self.restart_policy
+        )
+        logger.debug(host_config)
+
+        return host_config
 
     def _get_port_bindings(self):
         return {self.internal_port: ('0.0.0.0',)}
@@ -162,3 +175,20 @@ class AbstractDatabase(metaclass=ABCMeta):
 
     def _delete_volume_data(self):
         shutil.rmtree(self.datadir_launcher)
+
+    def _get_free_port(self):
+        """
+        This method finds a free port number for new containers to be created,
+        it releases the port just before returning the port number, so there is
+        a chance for another process to get it, let's see if it works.
+
+        This requires the mariadb-replicator container to be running with
+        --net=host otherwise the port returned by this method will be a free port
+        inside the container, but may not be free on the host machine.
+        """
+        s = socket.socket()
+        s.bind(("", 0))
+        (ip, port) = s.getsockname()
+        s.close()
+        logger.debug("Assigning port {}".format(port))
+        return port

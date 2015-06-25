@@ -1,5 +1,5 @@
 Flask==0.10.1
 requests==2.4.3
-docker-py==1.0.0
+docker-py==1.2.3
 PyMySQL==0.6.4
 gunicorn==19.3.0
