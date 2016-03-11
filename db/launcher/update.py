@@ -33,24 +33,46 @@ def stop_database(database):
     print(indent("* Stopped"))
 
 
+def build_mysql_command(db):
+    return ["mysql",
+            "--user={}".format(db.user),
+            "--password={}".format(db.password),
+            "--host={}".format(db.internal_ip),
+            "--port={}".format(db.internal_port),
+            db.database]
+
+
+def run_command(command, stdin=None):
+    proc = subprocess.Popen(command,
+                            stdin=stdin,
+                            stderr=subprocess.PIPE,
+                            stdout=subprocess.PIPE,
+                            universal_newlines=True)
+    return proc.communicate()
+
+
 def import_database(db, dump):
     print(indent("* Importing data..."))
-    mysql_command = ["mysql",
-                     "--user={}".format(db.user),
-                     "--password={}".format(db.password),
-                     "--host={}".format(db.internal_ip),
-                     "--port={}".format(db.internal_port),
-                     db.database]
+    mysql_command = build_mysql_command(db)
 
     with open(dump, 'r') as f:
-        proc = subprocess.Popen(mysql_command, stdin=f)
-        out, err = proc.communicate()
+        out, err = run_command(mysql_command, stdin=f)
+        if err:
+            print(indent("* An error happened, debug information:", level=2))
+            print(get_engine_status(db))
+
+
+def get_engine_status(db):
+    mysql_command = build_mysql_command(db)
+    mysql_command.append("-e 'show engine innodb status'")
+    out, err = run_command(mysql_command)
+    return out
 
 
 def main():
     dumps = list_dump_files()
     for dump in dumps:
-        db_name = dump[:-4]  # strip .sql from the name
+        db_name = dump.rstrip('.sql')
         try:
             db = start_database(db_name)
             import_database(db, os.path.join(settings.DUMP_DIR, dump))

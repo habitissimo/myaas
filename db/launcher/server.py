@@ -5,7 +5,8 @@ from .utils.database import (
     get_database,
     list_databases,
     list_database_templates,
-    database_from_template)
+    database_from_template,
+    ImportInProgress)
 
 
 app = Flask(__name__)
@@ -54,8 +55,12 @@ def create_database(template, name):
         response = Response(status=304)  # not modified
         del response.headers['content-type']
         return response
-
-    db = database_from_template(template, name)
+    try:
+        db = database_from_template(template, name)
+    except ImportInProgress:
+        response = jsonify(status="Database not available, content is being imported.")
+        response.status_code = 500
+        return response
     if not db:
         abort(404)
     db.start()

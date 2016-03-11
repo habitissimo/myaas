@@ -1,9 +1,17 @@
 import docker
+import logging
+import os
 from subprocess import call
 
 from .container import find_container, list_containers, client
 from .. import settings
 from ..backends.mysql import MysqlDatabase
+
+logger = logging.getLogger(__name__)
+
+
+class ImportInProgress(Exception):
+    pass
 
 
 def list_databases():
@@ -28,11 +36,14 @@ def database_from_template(template, name):
     client = docker.Client()
     template_db = MysqlDatabase(client, template)
     if template_db.running():
-        template_db.stop()
+        raise ImportInProgress
     database = MysqlDatabase(client, '%s-%s' % (template, name))
     # reflink=auto will use copy on write if supported
-    call(["cp", "-r", "--reflink=auto",
-         template_db.datadir_launcher, database.datadir_launcher])
+    copy_command = ["cp", "-r", "--reflink=auto",
+                    os.path.join(template_db.datadir_launcher, '.'),
+                    database.datadir_launcher]
+    logger.debug(copy_command)
+    call(copy_command)
     return database
 
 
