@@ -48,7 +48,8 @@ def run_command(command, stdin=None):
                             stderr=subprocess.PIPE,
                             stdout=subprocess.PIPE,
                             universal_newlines=True)
-    return proc.communicate()
+    out, err = proc.communicate()
+    return (out, err)
 
 
 def import_database(db, dump):
@@ -64,7 +65,8 @@ def import_database(db, dump):
 
 def get_engine_status(db):
     mysql_command = build_mysql_command(db)
-    mysql_command.append("-e 'show engine innodb status'")
+    mysql_command.append("-e")
+    mysql_command.append("show engine innodb status\G")
     out, err = run_command(mysql_command)
     return out
 
@@ -72,7 +74,7 @@ def get_engine_status(db):
 def main():
     dumps = list_dump_files()
     for dump in dumps:
-        db_name = dump.rstrip('.sql')
+        db_name = dump[:-4]  # strip .sql from the name
         try:
             db = start_database(db_name)
             import_database(db, os.path.join(settings.DUMP_DIR, dump))
