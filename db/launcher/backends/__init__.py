@@ -6,10 +6,10 @@ import socket
 import docker
 import logging
 
-logger = logging.getLogger(__name__)
-
 from .. import settings
 from ..utils.container import find_container
+
+logger = logging.getLogger(__name__)
 
 
 class DBTimeoutException(Exception):
