@@ -16,14 +16,21 @@ def indent(string, level=1):
     return spacing + string
 
 
-def start_database(name):
-    print("- Found database {}".format(name))
+def remove_recreate_database(name):
+    # find existing database, remove it, then recreate
     db = MysqlDatabase(client, name=name)
+    db.purge()
+    # recreate
+    db = MysqlDatabase(client, name=name)
+    print("- Creating database {}".format(name))
+
     if not db.running():
         print(indent("* Not running, starting..."))
         db.start()
         db.wait_until_active()
+
     print(indent("* OK"))
+
     return db
 
 
@@ -76,7 +83,7 @@ def main():
     for dump in dumps:
         db_name = dump[:-4]  # strip .sql from the name
         try:
-            db = start_database(db_name)
+            db = remove_recreate_database(db_name)
             import_database(db, os.path.join(settings.DUMP_DIR, dump))
             stop_database(db)
         except:
