@@ -18,10 +18,12 @@ This solution is being used to provide a variety of databases ranging from a few
 
 You put your sql backups in a folder and run the updater command, this will import the databases and prepare them as templates. This is the slow part, we run it at nights so developers can have acces to yesterday's data in the morning.
 
+The backups are loaded into a dockerized mysql instance, this docker container binds the datadir to a host volume stored on a filesystem with [Copy On Write](https://es.wikipedia.org/wiki/Copy-on-write) support.
+
 Once the templates have been loaded the script stops the template database instances.
 
 Every time a user asks for a new database the service performs a copy on write from the template to a new directory, this directory is mounted as a volume
-for a new mysql docker instance launched for this user.
+for a new mysql docker instance launched for this user. As the operation is performed against a [COW](https://es.wikipedia.org/wiki/Copy-on-write) filesystem the operation is both fast and space efficient.
 
 Finally the service responds with access data required to use the database.
 
@@ -33,7 +35,7 @@ Finally the service responds with access data required to use the database.
 ## TODO
  - [ ] Use docker volume API instead of hacking arround with volume bindings
  - [ ] Create adapters for postgresql and mongodb
-
+ 
 ## Support
 
 If you have problems using this service [open an issue](../../Habitissimo/myass/issues).
