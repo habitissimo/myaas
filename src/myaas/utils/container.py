@@ -44,4 +44,3 @@ def get_random_cpuset():
     cores_to_assign = settings.CPU_PINNING_INSTANCE_CORES
     random_cores = random_sample(range(available_cores), cores_to_assign)
     return ",".join(map(str, random_cores))
-

@@ -1,7 +1,7 @@
 FROM python:3
 
 RUN apt-get update -y && \
-    apt-get install -y mysql-client && \
+    apt-get install -y mysql-client postgresql-client && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

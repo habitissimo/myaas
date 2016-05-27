@@ -11,6 +11,7 @@ from taskset import TaskSet, task_method
 
 
 class DBApiClient(object):
+
     def __init__(self, base_url):
         self.base_url = base_url
         self.headers = {'Accept': 'text/plain, application/json'}

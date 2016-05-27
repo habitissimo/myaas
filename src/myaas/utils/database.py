@@ -1,8 +1,14 @@
 import logging
+import importlib
 
+from .. import settings
 from .container import list_containers
 
 logger = logging.getLogger(__name__)
+
+
+def get_enabled_backend():
+    return importlib.import_module(settings.BACKEND)
 
 
 def get_myaas_containers():

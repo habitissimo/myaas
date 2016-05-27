@@ -2,9 +2,11 @@ import os
 import sys
 import traceback
 
+from docker.errors import NotFound as ImageNotFound
+
 from . import settings
 from .utils.container import client
-from .backends.mysql import MysqlDatabaseTemplate
+from .utils.database import get_enabled_backend
 from .backends.exceptions import NonExistentTemplate, ImportDataError
 
 
@@ -28,8 +30,9 @@ def remove_recreate_database(template):
     """
     find existing database, remove it, then recreate
     """
+    backend = get_enabled_backend().Template
     try:
-        db = MysqlDatabaseTemplate(client, template, False)
+        db = backend(client, template, False)
         if db.running():
             db.stop()
         db.do_backup(use_rename=True)
@@ -37,7 +40,16 @@ def remove_recreate_database(template):
     except NonExistentTemplate:
         pass  # this means this database is being imported for the first time
 
-    return MysqlDatabaseTemplate(client, template, True)
+    try:
+        database = backend(client, template, True)
+    except ImageNotFound as e:
+        import sys
+        print("\n### ERROR ###", file=sys.stderr)
+        print(e.explanation.decode(), file=sys.stderr)
+        print("Pull the image and try again.", file=sys.stderr)
+        sys.exit(1)
+
+    return database
 
 
 def main():

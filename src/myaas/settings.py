@@ -1,5 +1,11 @@
 from decouple import config
 
+# Backend to enable, valid choices are:
+# "myaas.backends.mysql"
+# "myaas.backends.postgres"
+BACKEND = config("BACKEND", default="myaas.backends.mysql")
+
+
 # Controls the debug mode of the application
 DEBUG = config('DEBUG', default=False, cast=bool)
 
@@ -23,6 +29,14 @@ MYSQL_ENVIRONMENT = {
     "MYSQL_ROOT_PASSWORD": config("MYSQL_ROOT_PASSWORD", default="secret"),
     "MYSQL_DATABASE": config("MYSQL_DATABASE", default="default"),
 }
+
+POSTGRES_IMAGE = config("POSTGRES_IMAGE", default="postgres:9.4")
+POSTGRES_ENVIRONMENT = {
+    "POSTGRES_PASSWORD": config("POSTGRES_PASSWORD", default="secret"),
+    "POSTGRES_USER": config("POSTGRES_USER", default="postgres"),
+    "POSTGRES_DB": config("POSTGRES_DB", default="postgres"),
+}
+
 
 # Enable CPU pinning for created containers
 CPU_PINNING = config("CPU_PINNING", default=True, cast=bool)

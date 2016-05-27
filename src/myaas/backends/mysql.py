@@ -1,5 +1,4 @@
 import pymysql
-import subprocess
 
 from .. import settings
 
@@ -7,7 +6,7 @@ from .base import AbstractDatabase, AbstractDatabaseTemplate
 from .exceptions import ImportDataError
 
 
-class MysqlDatabase(AbstractDatabase):
+class Database(AbstractDatabase):
     @property
     def provider_name(self):
         return "mysql"
@@ -60,10 +59,10 @@ class MysqlDatabase(AbstractDatabase):
         return True
 
 
-class MysqlDatabaseTemplate(MysqlDatabase, AbstractDatabaseTemplate):
+class Template(Database, AbstractDatabaseTemplate):
     @property
     def database_backend(self):
-        return MysqlDatabase
+        return Database
 
     def import_data(self, sql_file):
         mysql_command = self._build_mysql_command()
@@ -86,12 +85,3 @@ class MysqlDatabaseTemplate(MysqlDatabase, AbstractDatabaseTemplate):
                 "--host={}".format(self.internal_ip),
                 "--port={}".format(self.service_port),
                 self.database]
-
-    def _run_command(self, command, stdin=None):
-        proc = subprocess.Popen(command,
-                                stdin=stdin,
-                                stderr=subprocess.PIPE,
-                                stdout=subprocess.PIPE,
-                                universal_newlines=True)
-        out, err = proc.communicate()
-        return (out, err)

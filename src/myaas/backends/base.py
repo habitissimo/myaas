@@ -1,4 +1,5 @@
 import logging
+import subprocess
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 from os.path import isdir, join as join_path
@@ -305,3 +306,13 @@ class AbstractDatabaseTemplate(AbstractDatabase):
     @property
     def restart_policy(self):
         return {"MaximumRetryCount": 0, "Name": "no"}
+
+    def _run_command(self, command, stdin=None, env=None):
+        proc = subprocess.Popen(command,
+                                stdin=stdin,
+                                stderr=subprocess.PIPE,
+                                stdout=subprocess.PIPE,
+                                universal_newlines=True,
+                                env=env)
+        out, err = proc.communicate()
+        return (out, err)

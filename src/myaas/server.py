@@ -2,9 +2,8 @@ from flask import Flask, Response, request, jsonify, abort
 
 from .settings import HOSTNAME
 from .utils.container import client
-from .utils.database import get_myaas_containers
-from .utils.database import list_databases, list_database_templates
-from .backends.mysql import MysqlDatabase, MysqlDatabaseTemplate
+from .utils.database import (get_myaas_containers, get_enabled_backend,
+                             list_databases, list_database_templates)
 from .backends.exceptions import (NonExistentDatabase, NonExistentTemplate,
                                   ImportInProgress)
 
@@ -40,8 +39,9 @@ def show_templates():
 
 @app.route('/db/<template>/<name>', methods=['get'])
 def inspect_database(template, name):
+    database = get_enabled_backend().Database
     try:
-        db = MysqlDatabase(client, template, name)
+        db = database(client, template, name)
     except NonExistentDatabase:
         abort(404)
 
@@ -61,16 +61,18 @@ def inspect_database(template, name):
 
 @app.route('/db/<template>/<name>', methods=['post'])
 def create_database(template, name):
+    database_class = get_enabled_backend().Database
     try:
-        db = MysqlDatabase(client, template, name)
+        db = database_class(client, template, name)
         response = Response(status=304)  # not modified
         del response.headers['content-type']
         return response
     except NonExistentDatabase:
         pass
 
+    template_class = get_enabled_backend().Template
     try:
-        template_db = MysqlDatabaseTemplate(client, template)
+        template_db = template_class(client, template)
         db = template_db.clone(name)
         db.start()
     except ImportInProgress:
@@ -89,8 +91,9 @@ def create_database(template, name):
 
 @app.route('/db/<template>/<name>', methods=['delete'])
 def remove_database(template, name):
+    database_class = get_enabled_backend().Database
     try:
-        db = MysqlDatabase(client, template, name)
+        db = database_class(client, template, name)
         db.remove()
     except NonExistentDatabase:
         abort(404)
