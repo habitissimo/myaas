@@ -151,7 +151,7 @@ class AbstractDatabase(metaclass=ABCMeta):
 
     def wait_until_active(self):
         tries = 0
-        while tries < 20:
+        while tries < 30:
             if self.test_connection():
                 return
             time.sleep(5)
