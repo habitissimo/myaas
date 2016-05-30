@@ -31,10 +31,10 @@ class AbstractDatabase(metaclass=ABCMeta):
         if not self.container:
             labels = {
                 'com.myaas.provider': self.provider,
-                'com.myass.is_template': 'True' if name is None else 'False',
-                'com.myass.template': template,
-                'com.myass.instance': name,
-                'com.myass.name': self.name
+                'com.myaas.is_template': 'True' if name is None else 'False',
+                'com.myaas.template': template,
+                'com.myaas.instance': name,
+                'com.myaas.name': self.name
             }
             self.create(labels)
 

@@ -48,17 +48,17 @@ def database_from_template(template, name):
 
 
 def _is_database_container(container):
-    if 'com.myass.instance' not in container['Labels']:
+    if 'com.myaas.instance' not in container['Labels']:
         return False
 
-    return container['Labels'].get('com.myass.instance') != ''
+    return container['Labels'].get('com.myaas.instance') != ''
 
 
 def _is_template_container(container):
-    if 'com.myass.is_template' not in container['Labels']:
+    if 'com.myaas.is_template' not in container['Labels']:
         return False
 
-    return container['Labels'].get('com.myass.is_template') == 'True'
+    return container['Labels'].get('com.myaas.is_template') == 'True'
 
 
 def _count_dashes(name):
@@ -68,4 +68,4 @@ def _count_dashes(name):
 
 def _get_database_name(container):
     labels = container['Labels']
-    return "%s,%s" % (labels['com.myass.template'], labels['com.myass.instance'])
+    return "%s,%s" % (labels['com.myaas.template'], labels['com.myaas.instance'])

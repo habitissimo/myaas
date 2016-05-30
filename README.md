@@ -1,4 +1,4 @@
-# MyASS (Mysql As A Service)
+# MyAAS (Mysql As A Service)
 
 This product has been developed internally at habitissimo for allowing developers to get the database instances they need for development as fast as possible.
 
@@ -30,7 +30,7 @@ Finally the service responds with access data required to use the database.
 ## What you will find here:
 
  - **db**: databases as a service [read more](db/README.md)
- - **fabfile**: example client to interact with myass [read more](fabfile/README.md)
+ - **fabfile**: example client to interact with myaas [read more](fabfile/README.md)
 
 ## TODO
  - [ ] Use docker volume API instead of hacking arround with volume bindings
@@ -38,7 +38,7 @@ Finally the service responds with access data required to use the database.
 
 ## Extendibility
 
-MyAss has been designed with mysql in mind, but the implementation is database agnostic and can be adapted easily to work with any type of database which stores data in disk.
+MyAAS has been designed with mysql in mind, but the implementation is database agnostic and can be adapted easily to work with any type of database which stores data in disk.
 
 Look for [MysqlDatabase adapter](db/launcher/backends/mysql.py) to have an idea of how easy is to support new databases, you just need to extend [AbstractDatabase](db/launcher/backends/__init__.py) and define a few properties.
  
