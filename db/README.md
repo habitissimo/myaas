@@ -37,6 +37,7 @@ docker run -d --name=myass \
  -v "/opt/hops/db:/hops/db" \
  -e "HOST_NAME=`hostname`" \
  -e "MYSQL_DOCKER_IMAGE=habitissimo/myass-mysql:10.1" \
+ --restart=always \
   habitissimo/myass
 ```
 
