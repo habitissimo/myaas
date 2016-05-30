@@ -5,6 +5,9 @@ from .. import settings
 
 
 class MysqlDatabase(AbstractDatabase):
+    @property
+    def provider(self):
+        return "mysql"
 
     @property
     def datadir_database(self):

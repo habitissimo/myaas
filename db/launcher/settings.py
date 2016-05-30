@@ -14,7 +14,7 @@ HOST_DUMP_DIR = os.getenv("HOPS_DUMP_DIR")
 DATA_DIR = "/hops/db/data"
 DUMP_DIR = "/hops/db/dumps"
 
-CONTAINER_PREFIX = 'dbm-'
+CONTAINER_PREFIX = 'myaas-'
 
 # Required environemnt to execute library/mariadb:latest
 MYSQL_ENVIRONMENT = {

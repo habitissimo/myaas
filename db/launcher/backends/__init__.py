@@ -3,7 +3,6 @@ import time
 import os
 import shutil
 import socket
-import docker
 import logging
 
 from .. import settings
@@ -19,13 +18,25 @@ class DBTimeoutException(Exception):
 class AbstractDatabase(metaclass=ABCMeta):
     """Abstract implementation for a database backend"""
 
-    def __init__(self, docker_client, name):
+    def __init__(self, docker_client, template, name=None):
         self.client = docker_client
-        self.name = '{prefix}{name}'.format(
-            prefix=settings.CONTAINER_PREFIX, name=name)
+        if name:
+            self.name = '{prefix}{template}-{name}'.format(
+                prefix=settings.CONTAINER_PREFIX, template=template, name=name)
+        else:
+            self.name = '{prefix}{template}'.format(
+                prefix=settings.CONTAINER_PREFIX, template=template)
+
         self.container = find_container(self.name)
         if not self.container:
-            self.create()
+            labels = {
+                'com.myaas.provider': self.provider,
+                'com.myass.is_template': 'True' if name is None else 'False',
+                'com.myass.template': template,
+                'com.myass.instance': name,
+                'com.myass.name': self.name
+            }
+            self.create(labels)
 
     @property
     @abstractmethod
@@ -48,6 +59,11 @@ class AbstractDatabase(metaclass=ABCMeta):
     @property
     @abstractmethod
     def environment(self):
+        pass
+
+    @property
+    @abstractmethod
+    def provider(self):
         pass
 
     @property
@@ -94,15 +110,15 @@ class AbstractDatabase(metaclass=ABCMeta):
     def database(self):
         return "default"
 
-    def create(self):
+    def create(self, labels={}):
         self.container = self.client.create_container(
             image=self.image,
             name=self.name,
             environment=self.environment,
-            mem_limit=self.mem_limit,
             ports=[self.internal_port],
             volumes=[self.datadir_database],
-            host_config=self._get_host_config_definition())
+            host_config=self._get_host_config_definition(),
+            labels=labels)
 
     @abstractmethod
     def test_connection(self, timeout=1):
@@ -138,7 +154,7 @@ class AbstractDatabase(metaclass=ABCMeta):
         while tries < 20:
             if self.test_connection():
                 return
-            time.sleep(3)
+            time.sleep(5)
             tries += 1
 
         raise DBTimeoutException("Could not connect with database, max retries reached")
@@ -154,13 +170,14 @@ class AbstractDatabase(metaclass=ABCMeta):
 
     def _get_host_config_definition(self):
         "create host_config object with permanent port mapping"
-        host_config = docker.utils.create_host_config(
+        host_config = self.client.create_host_config(
             port_bindings={
                 self.internal_port: self._get_free_port(),
             },
             binds={
                 self.datadir_host: {'bind': self.datadir_database, 'ro': False}
             },
+            mem_limit=self.mem_limit,
             restart_policy=self.restart_policy
         )
         logger.debug(host_config)

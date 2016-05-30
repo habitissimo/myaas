@@ -31,12 +31,13 @@ docker pull library/mariadb:latest
 
 # create the multiplexer instance
 
-docker run -d --name=mariadb-replicator \
+docker run -d --name=myass \
  -p 5001:5001 \
  -v "/var/run/docker.sock:/var/run/docker.sock" \
  -v "/opt/hops/db:/hops/db" \
  -e "HOST_NAME=`hostname`" \
-  habitissimo/mariadb-replicator
+ -e "MYSQL_DOCKER_IMAGE=habitissimo/myass-mysql:10.1" \
+  habitissimo/myass
 ```
 
 The first time you lauch it it will have no databases or templates, to add some templates read the next section.
@@ -47,12 +48,11 @@ Run a cron to rsync mysqldump files to `/opt/hops/db/dumps`, your cron will exec
 
 At the end of your script put this:
 ```
-docker stop habitissimo/mariadb-replicator
-docker run -t --rm --name=mariadb-replicator-update \
+docker run -t --rm --name=myass-update \
  -v "/var/run/docker.sock:/var/run/docker.sock" \
  -v "/opt/hops/db:/hops/db" \
- habitissimo/mariadb-replicator update
-docker start habitissimo/mariadb-replicator
+ -e "MYSQL_DOCKER_IMAGE=habitissimo/myass-mysql:10.1" \
+ habitissimo/myass update
 ```
 
 While the base databases are being updated you can't interact with the service, that's why you should stop it before updating data.

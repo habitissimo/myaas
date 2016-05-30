@@ -1,3 +1,4 @@
+import sys
 import os
 import subprocess
 
@@ -16,13 +17,13 @@ def indent(string, level=1):
     return spacing + string
 
 
-def remove_recreate_database(name):
+def remove_recreate_database(template):
     # find existing database, remove it, then recreate
-    db = MysqlDatabase(client, name=name)
+    db = MysqlDatabase(client, template=template)
     db.purge()
     # recreate
-    db = MysqlDatabase(client, name=name)
-    print("- Creating database {}".format(name))
+    db = MysqlDatabase(client, template=template)
+    print("- Creating database {}".format(template))
 
     if not db.running():
         print(indent("* Not running, starting..."))
@@ -87,7 +88,7 @@ def main():
             import_database(db, os.path.join(settings.DUMP_DIR, dump))
             stop_database(db)
         except:
-            pass
+            print("Unexpected error:", sys.exc_info())
 
 
 if __name__ == "__main__":

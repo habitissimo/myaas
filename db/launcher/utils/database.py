@@ -37,7 +37,7 @@ def database_from_template(template, name):
     template_db = MysqlDatabase(client, template)
     if template_db.running():
         raise ImportInProgress
-    database = MysqlDatabase(client, '%s-%s' % (template, name))
+    database = MysqlDatabase(client, template, name)
     # reflink=auto will use copy on write if supported
     copy_command = ["cp", "-r", "--reflink=auto",
                     os.path.join(template_db.datadir_launcher, '.'),
@@ -47,23 +47,18 @@ def database_from_template(template, name):
     return database
 
 
-def _is_hops_db_container(container):
-    names = container['Names']
-    if not names:
-        return False
-    return names[0].startswith('/{}'.format(settings.CONTAINER_PREFIX))
-
-
 def _is_database_container(container):
-    if not _is_hops_db_container(container):
+    if 'com.myass.instance' not in container['Labels']:
         return False
-    return _count_dashes(container['Names'][0]) == 3
+
+    return container['Labels'].get('com.myass.instance') != ''
 
 
 def _is_template_container(container):
-    if not _is_hops_db_container(container):
+    if 'com.myass.is_template' not in container['Labels']:
         return False
-    return _count_dashes(container['Names'][0]) == 2
+
+    return container['Labels'].get('com.myass.is_template') == 'True'
 
 
 def _count_dashes(name):
@@ -72,9 +67,5 @@ def _count_dashes(name):
 
 
 def _get_database_name(container):
-    name = container['Names'][0]
-    # remove / from the start
-    name = name[1:]
-    # remove prefix
-    name = name[len(settings.CONTAINER_PREFIX):]
-    return name
+    labels = container['Labels']
+    return "%s,%s" % (labels['com.myass.template'], labels['com.myass.instance'])
