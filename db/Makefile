@@ -38,7 +38,7 @@ update: build
 # check pep8
 pep: flake
 flake:
-	@PAGER=cat git grep -i myass -- './*' ':(exclude)Makefile'  && echo "####\nWarning myASS typo detected!\n####"
+	-@PAGER=cat git grep -i myass -- './*' ':(exclude)Makefile'  && echo "####\nWarning myASS typo detected!\n####"
 	@${DOCKER_RUN} flake8 --ignore=E501,F841 .
 
 # run the test suite
