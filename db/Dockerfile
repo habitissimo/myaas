@@ -21,7 +21,7 @@ ADD docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 ADD runserver.py /code/
 
-ENV MYSQL_DOCKER_IMAGE library/mariadb:latest
+ENV MYSQL_DOCKER_IMAGE habitissimo/myaas-mysql:10.1
 ENV MYSQL_ROOT_PASSWORD jiberish
 ENV MYSQL_DATABASE default
 ENV DOCKER_SOCKET unix://var/run/docker.sock

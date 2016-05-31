@@ -208,9 +208,9 @@ class AbstractDatabase(metaclass=ABCMeta):
         it releases the port just before returning the port number, so there is
         a chance for another process to get it, let's see if it works.
 
-        This requires the mariadb-replicator container to be running with
-        --net=host otherwise the port returned by this method will be a free port
-        inside the container, but may not be free on the host machine.
+        This requires the myaas container to be running with --net=host otherwise
+        the port returned by this method will be a free port inside the container,
+        but may not be free on the host machine.
         """
         s = socket.socket()
         s.bind(("", 0))

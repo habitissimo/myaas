@@ -16,7 +16,7 @@ DUMP_DIR = "/hops/db/dumps"
 
 CONTAINER_PREFIX = 'myaas-'
 
-# Required environemnt to execute library/mariadb:latest
+# Required environemnt to execute habitissimo/myaas-mysql:10.1
 MYSQL_ENVIRONMENT = {
     "MYSQL_ROOT_PASSWORD": MYSQL_ROOT_PASSWORD,
     "MYSQL_USER": "not_used",

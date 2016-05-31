@@ -27,7 +27,7 @@ To setup this service you only need to pull the image and run it.
 # when verifying the DB is up and running as it does expect the image to be
 # present in advance
 
-docker pull library/mariadb:latest
+docker pull habitissimo/myaas-mysql:10.1
 
 # create the multiplexer instance
 
@@ -75,7 +75,7 @@ You can provide some configuration parameters trough environemnt variables.
  * **HOST_NAME**: The hostname the service should show as a connection endpoint for itself.
  
  * **MYSQL_DOCKER_IMAGE**: the mysql image used to spawn new databases.
-    * Default value: library/mariadb:latest
+    * Default value: habitissimo/myaas-mysql:10.1
     
  * **MYSQL_ROOT_PASSWORD**: the password to be set for root access in create databases.
     * Default value: jiberish
@@ -92,5 +92,6 @@ You can provide some configuration parameters trough environemnt variables.
  * **HOPS_TEMP_DIR**: Path where the application will store temporary data.
     * Default value: `/opt/hops/db/tmp`
 
-**Warning:** You can replace the MYSQL_DOCKER_IMAGE by a custom one, but the code makes some asumptions on how to launch the database image, mariadb image requires the following environment variables to be passed to work: MYSQL_ROOT_PASSWORD, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE.
-Your image should be able to accept this environment variables (even if it will not use them) and shold not require aditional ones. The easiest way to customize the database settings is to create a derivate from library/mariadb:latest.
+**Warning:** You can replace the `MYSQL_DOCKER_IMAGE` by a custom one, but the code makes some asumptions on how to launch the database image, `habitissimo/myaas-mysql` image requires the following environment variables to be passed to work: `MYSQL_ROOT_PASSWORD`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`.
+
+Your image should be able to accept this environment variables (even if it will not use them) and shold not require aditional ones. The easiest way to customize the database settings is to create a derivate from habitissimo/myaas-mysql:10.1.
