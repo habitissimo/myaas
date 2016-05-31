@@ -68,4 +68,7 @@ def _count_dashes(name):
 
 def _get_database_name(container):
     labels = container['Labels']
-    return "%s,%s" % (labels['com.myaas.template'], labels['com.myaas.instance'])
+    if labels['com.myaas.is_template'] == 'True':
+        return labels['com.myaas.template']
+    else:
+        return "%s,%s" % (labels['com.myaas.template'], labels['com.myaas.instance'])
