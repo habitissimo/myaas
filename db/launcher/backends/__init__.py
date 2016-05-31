@@ -18,13 +18,11 @@ class DBTimeoutException(Exception):
 class AbstractDatabase(metaclass=ABCMeta):
     """Abstract implementation for a database backend"""
 
-    def __init__(self, docker_client, template, name=None):
+    def __init__(self, docker_client, template, name):
         self.client = docker_client
         self.template = template
         self.instance_name = name
         self.name = self._generate_container_name(template, name)
-        self.is_template = name is None
-
         self.container = find_container(self.name)
         if not self.container:
             self.container = self._create_container()
@@ -75,10 +73,7 @@ class AbstractDatabase(metaclass=ABCMeta):
 
     @property
     def restart_policy(self):
-        if self.is_template:
-            return {"MaximumRetryCount": 0, "Name": "no"}
-        else:
-            return {"MaximumRetryCount": 0, "Name": "always"}
+        return {"MaximumRetryCount": 0, "Name": "always"}
 
     @property
     def external_port(self):
@@ -153,7 +148,7 @@ class AbstractDatabase(metaclass=ABCMeta):
             host_config=self._get_host_config_definition(),
             labels=self._get_container_labels())
 
-    def _generate_container_name(self, template, name):
+    def _generate_container_name(self, template, name=None):
         if name:
             return '%s%s-%s' % (settings.CONTAINER_PREFIX, template, name)
         else:
@@ -184,10 +179,9 @@ class AbstractDatabase(metaclass=ABCMeta):
     def _get_container_labels(self):
         return {
             'com.myaas.provider': self.provider,
-            'com.myaas.is_template': 'True' if self.is_template else 'False',
+            'com.myaas.is_template': 'False',
             'com.myaas.template': self.template,
             'com.myaas.instance': self.instance_name,
-            'com.myaas.name': self.name
         }
 
     def _datadir_created(self):
@@ -212,3 +206,30 @@ class AbstractDatabase(metaclass=ABCMeta):
         s.close()
         logger.debug("Assigning port {}".format(port))
         return port
+
+
+class AbstractDatabaseTemplate(AbstractDatabase):
+    """
+    Abstract implementation of a template database
+    """
+
+    def __init__(self, docker_client, template, create_new=False):
+        self.create_new = create_new
+        super().__init__(docker_client, template, None)
+
+    @property
+    def restart_policy(self):
+        return {"MaximumRetryCount": 0, "Name": "no"}
+
+    def _create_container(self):
+        if not self.create_new:
+            return None
+
+        return super()._create_container()
+
+    def _get_container_labels(self):
+        return {
+            'com.myaas.is_template': 'True',
+            'com.myaas.provider': self.provider,
+            'com.myaas.template': self.template,
+        }

@@ -5,12 +5,16 @@ from subprocess import call
 
 from .container import find_container, list_containers, client
 from .. import settings
-from ..backends.mysql import MysqlDatabase
+from ..backends.mysql import MysqlDatabase, MysqlDatabaseTemplate
 
 logger = logging.getLogger(__name__)
 
 
 class ImportInProgress(Exception):
+    pass
+
+
+class InvalidTemplateName(Exception):
     pass
 
 
@@ -25,23 +29,29 @@ def list_database_templates():
 
 
 def get_database(template, name):
-    name = '{template}-{name}'.format(**locals())
-    container = find_container(settings.CONTAINER_PREFIX + name)
+    container = find_container("%s%s-%s" % (settings.CONTAINER_PREFIX, template, name))
     if not container:
         return None
-    return MysqlDatabase(client, name)
+    return MysqlDatabase(client, template, name)
 
 
 def database_from_template(template, name):
     client = docker.Client()
-    template_db = MysqlDatabase(client, template)
+    template_db = MysqlDatabaseTemplate(client, template)
+
+    if not template_db.container:
+        raise InvalidTemplateName
+
     if template_db.running():
         raise ImportInProgress
+
     database = MysqlDatabase(client, template, name)
+
     # reflink=auto will use copy on write if supported
     copy_command = ["cp", "-r", "--reflink=auto",
                     os.path.join(template_db.datadir_launcher, '.'),
                     database.datadir_launcher]
+
     logger.debug(copy_command)
     call(copy_command)
     return database

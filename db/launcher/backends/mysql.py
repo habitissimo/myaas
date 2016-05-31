@@ -1,6 +1,6 @@
 import pymysql
 
-from . import AbstractDatabase
+from . import AbstractDatabase, AbstractDatabaseTemplate
 from .. import settings
 
 
@@ -33,9 +33,6 @@ class MysqlDatabase(AbstractDatabase):
     def mem_limit(self):
         return '3g'
 
-    def clone(self):
-        pass
-
     def test_connection(self):
         super().test_connection()
         try:
@@ -50,3 +47,7 @@ class MysqlDatabase(AbstractDatabase):
             return False
 
         return True
+
+
+class MysqlDatabaseTemplate(MysqlDatabase, AbstractDatabaseTemplate):
+    pass

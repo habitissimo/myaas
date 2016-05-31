@@ -3,7 +3,7 @@ import os
 import subprocess
 
 from . import settings
-from .backends.mysql import MysqlDatabase
+from .backends.mysql import MysqlDatabaseTemplate
 from .utils.container import client
 
 
@@ -19,10 +19,10 @@ def indent(string, level=1):
 
 def remove_recreate_database(template):
     # find existing database, remove it, then recreate
-    db = MysqlDatabase(client, template=template)
+    db = MysqlDatabaseTemplate(client, template, False)
     db.purge()
     # recreate
-    db = MysqlDatabase(client, template=template)
+    db = MysqlDatabaseTemplate(client, template, True)
     print("- Creating database {}".format(template))
 
     if not db.running():

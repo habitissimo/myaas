@@ -6,7 +6,8 @@ from .utils.database import (
     list_databases,
     list_database_templates,
     database_from_template,
-    ImportInProgress)
+    ImportInProgress,
+    InvalidTemplateName)
 
 
 app = Flask(__name__)
@@ -61,6 +62,10 @@ def create_database(template, name):
         response = jsonify(status="Database not available, content is being imported.")
         response.status_code = 500
         return response
+    except InvalidTemplateName:
+        response = jsonify(status="Template \"{0}\" does not exists.".format(template))
+        response.status_code = 500
+        return response
     if not db:
         abort(404)
     db.start()
@@ -74,6 +79,7 @@ def remove_database(template, name):
     db = get_database(template, name)
     if not db:
         abort(404)
+
     db.purge()
     response = Response(status=204)
     del response.headers['content-type']
