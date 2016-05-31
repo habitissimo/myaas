@@ -1,7 +1,7 @@
 test=''
 CWD:= $(shell pwd)
 HOSTNAME := $(shell hostname -i)
-IMAGE=habitissimo/mariadb-replicator
+IMAGE=habitissimo/myaas
 DOCKER_RUN_FLAGS = --rm -e "HOST_NAME=$(HOSTNAME)"
 run     : DOCKER_RUN_FLAGS += -p 5001:5001 --name=dbm-server
 dev     : DOCKER_RUN_FLAGS += -p 5001:5001 -v "$(PWD):/code" -e "DEBUG=True" --name=launcher-server-dev
