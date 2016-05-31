@@ -1,14 +1,10 @@
 from flask import Flask, Response, request, jsonify, abort
 
 # from . import settings
-from .utils.database import (
-    get_database,
-    list_databases,
-    list_database_templates,
-    database_from_template,
-    ImportInProgress,
-    InvalidTemplateName)
-
+from .backends import NonExistentDatabase, NonExistentTemplate, ImportInProgress
+from .backends.mysql import MysqlDatabase, MysqlDatabaseTemplate
+from .utils.container import client
+from .utils.database import list_databases, list_database_templates
 
 app = Flask(__name__)
 
@@ -33,8 +29,9 @@ def show_templates():
 
 @app.route('/db/<template>/<name>', methods=['get'])
 def inspect_database(template, name):
-    db = get_database(template, name)
-    if not db:
+    try:
+        db = MysqlDatabase(client, template, name)
+    except NonExistentDatabase:
         abort(404)
 
     if request.args.get('all'):
@@ -51,24 +48,27 @@ def inspect_database(template, name):
 
 @app.route('/db/<template>/<name>', methods=['post'])
 def create_database(template, name):
-    db = get_database(template, name)
-    if db:
+    try:
+        db = MysqlDatabase(client, template, name)
         response = Response(status=304)  # not modified
         del response.headers['content-type']
         return response
+    except NonExistentDatabase:
+        pass
+
     try:
-        db = database_from_template(template, name)
+        template_db = MysqlDatabaseTemplate(client, template)
+        db = template_db.clone(name)
+        db.start()
     except ImportInProgress:
         response = jsonify(status="Database not available, content is being imported.")
         response.status_code = 500
         return response
-    except InvalidTemplateName:
+    except NonExistentTemplate:
         response = jsonify(status="Template \"{0}\" does not exists.".format(template))
         response.status_code = 500
         return response
-    if not db:
-        abort(404)
-    db.start()
+
     response = inspect_database(template, name)
     response.status_code = 201
     return response
@@ -76,11 +76,12 @@ def create_database(template, name):
 
 @app.route('/db/<template>/<name>', methods=['delete'])
 def remove_database(template, name):
-    db = get_database(template, name)
-    if not db:
+    try:
+        db = MysqlDatabase(client, template, name)
+        db.purge()
+    except NonExistentDatabase:
         abort(404)
 
-    db.purge()
     response = Response(status=204)
     del response.headers['content-type']
     return response

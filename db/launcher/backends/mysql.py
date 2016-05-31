@@ -50,4 +50,6 @@ class MysqlDatabase(AbstractDatabase):
 
 
 class MysqlDatabaseTemplate(MysqlDatabase, AbstractDatabaseTemplate):
-    pass
+    @property
+    def database_backend(self):
+        return MysqlDatabase

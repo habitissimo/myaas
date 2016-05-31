@@ -4,7 +4,6 @@ import unittest
 from launcher.utils.container import client
 from launcher.backends.mysql import MysqlDatabase
 from launcher.utils.database import (
-    get_database,
     list_databases,
     list_database_templates,
     database_from_template)
@@ -28,12 +27,6 @@ class UtilsDatabaseTest(unittest.TestCase):
             db = MysqlDatabase(cls.client, name)
             db.purge()
         cls.client.close()
-
-    def test_get_database(self):
-        db = get_database('template1', 'develop')
-        assert isinstance(db, MysqlDatabase)
-        db = get_database('template1', 'notexists')
-        assert db is None
 
     def test_list_databases(self):
         databases = list_databases()

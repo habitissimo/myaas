@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
+from subprocess import call
 import time
 import os
 import shutil
@@ -15,15 +16,30 @@ class DBTimeoutException(Exception):
     pass
 
 
+class NonExistentDatabase(Exception):
+    pass
+
+
+class NonExistentTemplate(NonExistentDatabase):
+    pass
+
+
+class ImportInProgress(Exception):
+    pass
+
+
 class AbstractDatabase(metaclass=ABCMeta):
     """Abstract implementation for a database backend"""
 
-    def __init__(self, docker_client, template, name):
+    not_found_exception_class = NonExistentDatabase
+
+    def __init__(self, docker_client, template, name, create=False):
         self.client = docker_client
         self.template = template
-        self.instance_name = name
-        self.name = self._generate_container_name(template, name)
-        self.container = find_container(self.name)
+        self.name = name
+        self.create = create
+        self.container_name = self._generate_container_name(template, name)
+        self.container = find_container(self.container_name)
         if not self.container:
             self.container = self._create_container()
 
@@ -53,11 +69,11 @@ class AbstractDatabase(metaclass=ABCMeta):
 
     @property
     def datadir_launcher(self):
-        return os.path.join(settings.DATA_DIR, self.name)
+        return os.path.join(settings.DATA_DIR, self.container_name)
 
     @property
     def datadir_host(self):
-        return os.path.join(settings.HOST_DATA_DIR, self.name)
+        return os.path.join(settings.HOST_DATA_DIR, self.container_name)
 
     @property
     def mem_limit(self):
@@ -139,9 +155,12 @@ class AbstractDatabase(metaclass=ABCMeta):
         return data
 
     def _create_container(self):
+        if not self.create:
+            raise self.not_found_exception_class()
+
         return self.client.create_container(
             image=self.image,
-            name=self.name,
+            name=self.container_name,
             environment=self.environment,
             ports=[self.internal_port],
             volumes=[self.datadir_database],
@@ -181,7 +200,7 @@ class AbstractDatabase(metaclass=ABCMeta):
             'com.myaas.provider': self.provider,
             'com.myaas.is_template': 'False',
             'com.myaas.template': self.template,
-            'com.myaas.instance': self.instance_name,
+            'com.myaas.instance': self.name,
         }
 
     def _datadir_created(self):
@@ -213,19 +232,18 @@ class AbstractDatabaseTemplate(AbstractDatabase):
     Abstract implementation of a template database
     """
 
-    def __init__(self, docker_client, template, create_new=False):
-        self.create_new = create_new
-        super().__init__(docker_client, template, None)
+    not_found_exception_class = NonExistentTemplate
+
+    def __init__(self, docker_client, template, create=False):
+        super().__init__(docker_client, template, None, create)
 
     @property
     def restart_policy(self):
         return {"MaximumRetryCount": 0, "Name": "no"}
 
-    def _create_container(self):
-        if not self.create_new:
-            return None
-
-        return super()._create_container()
+    @abstractproperty
+    def database_backend(self):
+        pass
 
     def _get_container_labels(self):
         return {
@@ -233,3 +251,16 @@ class AbstractDatabaseTemplate(AbstractDatabase):
             'com.myaas.provider': self.provider,
             'com.myaas.template': self.template,
         }
+
+    def clone(self, name):
+        if self.running():
+            raise ImportInProgress
+
+        database = self.database_backend(self.client, self.template, name, create=True)
+
+        template_data_path = os.path.join(self.datadir_launcher, '.')
+        db_data_path = database.datadir_launcher
+        # reflink=auto will use copy on write if supported
+        call(["cp", "-r", "--reflink=auto", template_data_path, db_data_path])
+
+        return database
