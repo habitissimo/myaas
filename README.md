@@ -35,6 +35,7 @@ Finally the service responds with access data required to use the database.
 ## TODO
  - [ ] Use docker volume API instead of hacking arround with volume bindings
  - [ ] Create adapters for postgresql and mongodb
+ - [ ] Update testsuite, broken after refactoring
 
 ## Extendibility
 
