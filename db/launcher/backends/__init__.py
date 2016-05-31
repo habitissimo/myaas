@@ -20,23 +20,14 @@ class AbstractDatabase(metaclass=ABCMeta):
 
     def __init__(self, docker_client, template, name=None):
         self.client = docker_client
-        if name:
-            self.name = '{prefix}{template}-{name}'.format(
-                prefix=settings.CONTAINER_PREFIX, template=template, name=name)
-        else:
-            self.name = '{prefix}{template}'.format(
-                prefix=settings.CONTAINER_PREFIX, template=template)
+        self.template = template
+        self.instance_name = name
+        self.name = self._generate_container_name(template, name)
+        self.is_template = name is None
 
         self.container = find_container(self.name)
         if not self.container:
-            labels = {
-                'com.myaas.provider': self.provider,
-                'com.myaas.is_template': 'True' if name is None else 'False',
-                'com.myaas.template': template,
-                'com.myaas.instance': name,
-                'com.myaas.name': self.name
-            }
-            self.create(labels)
+            self.container = self._create_container()
 
     @property
     @abstractmethod
@@ -80,7 +71,10 @@ class AbstractDatabase(metaclass=ABCMeta):
 
     @property
     def restart_policy(self):
-        return {"MaximumRetryCount": 0, "Name": "always"}
+        if self.is_template:
+            return {"MaximumRetryCount": 0, "Name": "no"}
+        else:
+            return {"MaximumRetryCount": 0, "Name": "always"}
 
     @property
     @abstractmethod
@@ -109,16 +103,6 @@ class AbstractDatabase(metaclass=ABCMeta):
     @property
     def database(self):
         return "default"
-
-    def create(self, labels={}):
-        self.container = self.client.create_container(
-            image=self.image,
-            name=self.name,
-            environment=self.environment,
-            ports=[self.internal_port],
-            volumes=[self.datadir_database],
-            host_config=self._get_host_config_definition(),
-            labels=labels)
 
     @abstractmethod
     def test_connection(self, timeout=1):
@@ -165,6 +149,22 @@ class AbstractDatabase(metaclass=ABCMeta):
             raise Exception("Docker inspect data not available")
         return data
 
+    def _create_container(self):
+        return self.client.create_container(
+            image=self.image,
+            name=self.name,
+            environment=self.environment,
+            ports=[self.internal_port],
+            volumes=[self.datadir_database],
+            host_config=self._get_host_config_definition(),
+            labels=self._get_container_labels())
+
+    def _generate_container_name(self, template, name):
+        if name:
+            return '%s%s-%s' % (settings.CONTAINER_PREFIX, template, name)
+        else:
+            return '%s%s' % (settings.CONTAINER_PREFIX, template)
+
     def _get_volumes_definition(self):
         return [self.datadir_database]
 
@@ -186,6 +186,15 @@ class AbstractDatabase(metaclass=ABCMeta):
 
     def _get_port_bindings(self):
         return {self.internal_port: ('0.0.0.0',)}
+
+    def _get_container_labels(self):
+        return {
+            'com.myaas.provider': self.provider,
+            'com.myaas.is_template': 'True' if self.is_template else 'False',
+            'com.myaas.template': self.template,
+            'com.myaas.instance': self.instance_name,
+            'com.myaas.name': self.name
+        }
 
     def _datadir_created(self):
         return os.path.isdir(self.datadir_launcher)
