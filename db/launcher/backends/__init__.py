@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 import time
 import os
 import shutil
@@ -29,9 +29,28 @@ class AbstractDatabase(metaclass=ABCMeta):
         if not self.container:
             self.container = self._create_container()
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def datadir_database(self):
+        pass
+
+    @abstractproperty
+    def image(self):
+        pass
+
+    @abstractproperty
+    def environment(self):
+        pass
+
+    @abstractproperty
+    def provider(self):
+        pass
+
+    @abstractproperty
+    def internal_port(self):
+        pass
+
+    @abstractproperty
+    def password(self):
         pass
 
     @property
@@ -41,21 +60,6 @@ class AbstractDatabase(metaclass=ABCMeta):
     @property
     def datadir_host(self):
         return os.path.join(settings.HOST_DATA_DIR, self.name)
-
-    @property
-    @abstractmethod
-    def image(self):
-        pass
-
-    @property
-    @abstractmethod
-    def environment(self):
-        pass
-
-    @property
-    @abstractmethod
-    def provider(self):
-        pass
 
     @property
     def mem_limit(self):
@@ -77,11 +81,6 @@ class AbstractDatabase(metaclass=ABCMeta):
             return {"MaximumRetryCount": 0, "Name": "always"}
 
     @property
-    @abstractmethod
-    def internal_port(self):
-        pass
-
-    @property
     def external_port(self):
         port_name = '{}/tcp'.format(self.internal_port)
         ports = self.inspect()['NetworkSettings']['Ports']
@@ -94,11 +93,6 @@ class AbstractDatabase(metaclass=ABCMeta):
     @property
     def user(self):
         return "root"
-
-    @property
-    @abstractmethod
-    def password(self):
-        pass
 
     @property
     def database(self):
