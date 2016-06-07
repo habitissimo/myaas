@@ -1,10 +1,10 @@
 from flask import Flask, Response, request, jsonify, abort
 
-# from . import settings
-from .backends import NonExistentDatabase, NonExistentTemplate, ImportInProgress
-from .backends.mysql import MysqlDatabase, MysqlDatabaseTemplate
 from .utils.container import client
 from .utils.database import list_databases, list_database_templates
+from .backends.mysql import MysqlDatabase, MysqlDatabaseTemplate
+from .backends.exceptions import (NonExistentDatabase, NonExistentTemplate,
+                                  ImportInProgress)
 
 app = Flask(__name__)
 

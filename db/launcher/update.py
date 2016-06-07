@@ -1,10 +1,11 @@
-import sys
 import os
-import subprocess
+import sys
+import traceback
 
 from . import settings
-from .backends.mysql import MysqlDatabaseTemplate
 from .utils.container import client
+from .backends.mysql import MysqlDatabaseTemplate
+from .backends.exceptions import NonExistentTemplate, ImportDataError
 
 
 def list_dump_files():
@@ -17,78 +18,64 @@ def indent(string, level=1):
     return spacing + string
 
 
+def print_exception():
+    print('-'*80)
+    traceback.print_exc(file=sys.stderr)
+    print('-'*80)
+
+
 def remove_recreate_database(template):
-    # find existing database, remove it, then recreate
-    db = MysqlDatabaseTemplate(client, template, False)
-    db.purge()
-    # recreate
-    db = MysqlDatabaseTemplate(client, template, True)
-    print("- Creating database {}".format(template))
+    """
+    find existing database, remove it, then recreate
+    """
+    try:
+        db = MysqlDatabaseTemplate(client, template, False)
+        db.backup_datadir(move=True)
+        db.destroy()
+    except NonExistentTemplate:
+        pass  # this means this database is being imported for the first time
 
-    if not db.running():
-        print(indent("* Not running, starting..."))
-        db.start()
-        db.wait_until_active()
-
-    print(indent("* OK"))
-
-    return db
-
-
-def stop_database(database):
-    print(indent("* Stopping database..."))
-    database.stop()
-    print(indent("* Stopped"))
-
-
-def build_mysql_command(db):
-    return ["mysql",
-            "--user={}".format(db.user),
-            "--password={}".format(db.password),
-            "--host={}".format(db.internal_ip),
-            "--port={}".format(db.internal_port),
-            db.database]
-
-
-def run_command(command, stdin=None):
-    proc = subprocess.Popen(command,
-                            stdin=stdin,
-                            stderr=subprocess.PIPE,
-                            stdout=subprocess.PIPE,
-                            universal_newlines=True)
-    out, err = proc.communicate()
-    return (out, err)
-
-
-def import_database(db, dump):
-    print(indent("* Importing data..."))
-    mysql_command = build_mysql_command(db)
-
-    with open(dump, 'r') as f:
-        out, err = run_command(mysql_command, stdin=f)
-        if err:
-            print(indent("* An error happened, debug information:", level=2))
-            print(get_engine_status(db))
-
-
-def get_engine_status(db):
-    mysql_command = build_mysql_command(db)
-    mysql_command.append("-e")
-    mysql_command.append("show engine innodb status\G")
-    out, err = run_command(mysql_command)
-    return out
+    return MysqlDatabaseTemplate(client, template, True)
 
 
 def main():
     dumps = list_dump_files()
     for dump in dumps:
         db_name = dump[:-4]  # strip .sql from the name
+        sql_file = os.path.join(settings.DUMP_DIR, dump)
+
+        print("- Creating database {}".format(db_name))
+        db = remove_recreate_database(db_name)
+
+        print(indent("* Starting database..."))
+        db.start()
+        print(indent("* Started"))
+
         try:
-            db = remove_recreate_database(db_name)
-            import_database(db, os.path.join(settings.DUMP_DIR, dump))
-            stop_database(db)
+            print(indent("* Waiting for database to accept connections"))
+            db.wait_until_active()
         except:
-            print("Unexpected error:", sys.exc_info())
+            db.stop()
+            db.restore_datadir()
+            print_exception()
+            continue
+
+        print(indent("* Importing data..."))
+        try:
+            db.import_data(sql_file)
+            db.remove_backup()
+        except ImportDataError:
+            print(indent("* An error happened, debug information:", level=2))
+            print(db.get_engine_status(), file=sys.stderr)
+            print(indent("* Restoring previous database", level=2))
+            db.stop()
+            db.restore_datadir()
+            print_exception()
+            continue
+
+        print(indent("* Stopping database..."))
+        db.stop()
+        print(indent("* Stopped"))
 
 
 if __name__ == "__main__":
