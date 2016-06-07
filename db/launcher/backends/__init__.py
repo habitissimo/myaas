@@ -44,7 +44,7 @@ class AbstractDatabase(metaclass=ABCMeta):
             self.container = self._create_container()
 
     @abstractproperty
-    def datadir_database(self):
+    def datadir(self):
         pass
 
     @abstractproperty
@@ -68,11 +68,11 @@ class AbstractDatabase(metaclass=ABCMeta):
         pass
 
     @property
-    def datadir_launcher(self):
+    def container_path(self):
         return os.path.join(settings.DATA_DIR, self.container_name)
 
     @property
-    def datadir_host(self):
+    def host_path(self):
         return os.path.join(settings.HOST_DATA_DIR, self.container_name)
 
     @property
@@ -163,7 +163,7 @@ class AbstractDatabase(metaclass=ABCMeta):
             name=self.container_name,
             environment=self.environment,
             ports=[self.internal_port],
-            volumes=[self.datadir_database],
+            volumes=[self.datadir],
             host_config=self._get_host_config_definition(),
             labels=self._get_container_labels())
 
@@ -174,7 +174,7 @@ class AbstractDatabase(metaclass=ABCMeta):
             return '%s%s' % (settings.CONTAINER_PREFIX, template)
 
     def _get_volumes_definition(self):
-        return [self.datadir_database]
+        return [self.datadir]
 
     def _get_host_config_definition(self):
         "create host_config object with permanent port mapping"
@@ -183,7 +183,7 @@ class AbstractDatabase(metaclass=ABCMeta):
                 self.internal_port: self._get_free_port(),
             },
             binds={
-                self.datadir_host: {'bind': self.datadir_database, 'ro': False}
+                self.host_path: {'bind': self.datadir, 'ro': False}
             },
             mem_limit=self.mem_limit,
             restart_policy=self.restart_policy
@@ -204,10 +204,10 @@ class AbstractDatabase(metaclass=ABCMeta):
         }
 
     def _datadir_created(self):
-        return os.path.isdir(self.datadir_launcher)
+        return os.path.isdir(self.container_path)
 
     def _delete_volume_data(self):
-        shutil.rmtree(self.datadir_launcher)
+        shutil.rmtree(self.container_path)
 
     def _get_free_port(self):
         """
@@ -258,8 +258,8 @@ class AbstractDatabaseTemplate(AbstractDatabase):
 
         database = self.database_backend(self.client, self.template, name, create=True)
 
-        template_data_path = os.path.join(self.datadir_launcher, '.')
-        db_data_path = database.datadir_launcher
+        template_data_path = os.path.join(self.container_path, '.')
+        db_data_path = database.container_path
         # reflink=auto will use copy on write if supported
         call(["cp", "-r", "--reflink=auto", template_data_path, db_data_path])
 

@@ -10,7 +10,7 @@ class MysqlDatabase(AbstractDatabase):
         return "mysql"
 
     @property
-    def datadir_database(self):
+    def datadir(self):
         return "/var/lib/mysql"
 
     @property

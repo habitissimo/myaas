@@ -50,7 +50,7 @@ class UtilsDatabaseTest(unittest.TestCase):
         db_template.wait_until_active()
 
         # calculate the path wich will be assigned to the new database
-        data_dir = db_template.datadir_launcher + '-' + name
+        data_dir = db_template.container_path + '-' + name
 
         assert not os.path.isdir(data_dir)
         database = database_from_template(template, name)
@@ -58,7 +58,7 @@ class UtilsDatabaseTest(unittest.TestCase):
         database.wait_until_active()
 
         # check assigned datadir matched the calculated
-        assert database.datadir_launcher == data_dir
+        assert database.container_path == data_dir
         # check datadir was created
         assert os.path.isdir(data_dir)
 

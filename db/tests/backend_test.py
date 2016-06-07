@@ -39,9 +39,9 @@ class MysqlDatabaseTest(unittest.TestCase):
     def test_paths(self):
         db = MysqlDatabase(self.client, 'base')
         # this is the path to db data as seen from the launcher
-        assert db.datadir_launcher.startswith(settings.DATA_DIR)
+        assert db.container_path.startswith(settings.DATA_DIR)
         # this is the real path on the docker host
-        assert db.datadir_host.startswith(settings.HOST_DATA_DIR)
+        assert db.host_path.startswith(settings.HOST_DATA_DIR)
 
     def test_start_stop_db(self):
         db = MysqlDatabase(self.client, 'base')
@@ -57,9 +57,9 @@ class MysqlDatabaseTest(unittest.TestCase):
         db = MysqlDatabase(self.client, 'base')
         db.start()
         db.wait_until_active()
-        assert os.path.isdir(db.datadir_launcher)
+        assert os.path.isdir(db.container_path)
         db.purge()
-        assert not os.path.isdir(db.datadir_launcher)
+        assert not os.path.isdir(db.container_path)
 
     def test_port_mapping(self):
         db = MysqlDatabase(self.client, 'base')
