@@ -1,6 +1,7 @@
 from flask import Flask, Response, request, jsonify, abort
 
 from .utils.container import client
+from .utils.database import get_myaas_containers
 from .utils.database import list_databases, list_database_templates
 from .backends.mysql import MysqlDatabase, MysqlDatabaseTemplate
 from .backends.exceptions import (NonExistentDatabase, NonExistentTemplate,
@@ -19,7 +20,16 @@ def hello_world():
 
 @app.route('/db', methods=['get'])
 def show_databases():
-    return jsonify(databases=list_databases())
+    databases = []
+    for c in get_myaas_containers():
+        databases.append({
+            'template': c['Labels']['com.myaas.template'],
+            'name': c['Labels']['com.myaas.instance'],
+            'state': c['Status'],
+            'created': c['Created'],
+        })
+
+    return jsonify(databases=databases)
 
 
 @app.route('/templates', methods=['get'])

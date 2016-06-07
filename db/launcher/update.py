@@ -19,9 +19,9 @@ def indent(string, level=1):
 
 
 def print_exception():
-    print('-'*80)
+    print('-' * 80)
     traceback.print_exc(file=sys.stderr)
-    print('-'*80)
+    print('-' * 80)
 
 
 def remove_recreate_database(template):

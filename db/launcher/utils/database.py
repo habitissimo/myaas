@@ -5,6 +5,10 @@ from .container import list_containers
 logger = logging.getLogger(__name__)
 
 
+def get_myaas_containers():
+    return filter(_is_database_container, list_containers())
+
+
 def list_databases():
     containers = filter(_is_database_container, list_containers())
     return [_get_database_name(c) for c in containers]
