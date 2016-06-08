@@ -5,10 +5,10 @@ HOSTNAME = config('HOST_NAME')
 
 # Docker socket address, can be replaced with a TCP address iy you prefer not
 # to bind mount the docker socket
-DOCKER_SOCKET = os.getenv("DOCKER_SOCKET", default="unix://var/run/docker.sock")
+DOCKER_SOCKET = config("DOCKER_SOCKET", default="unix://var/run/docker.sock")
 
-HOST_DATA_DIR = os.getenv("HOPS_DATA_DIR")
-HOST_DUMP_DIR = os.getenv("HOPS_DUMP_DIR")
+HOST_DATA_DIR = config("HOPS_DATA_DIR")
+HOST_DUMP_DIR = config("HOPS_DUMP_DIR")
 DATA_DIR = "/hops/db/data"
 DUMP_DIR = "/hops/db/dumps"
 
@@ -25,6 +25,6 @@ MYSQL_IMAGE = config("MYSQL_IMAGE", default="habitissimo/myaas-mysql:10.1")
 # Required environment variables for running the mysql image
 # All of the listed images above need this environemnt variables
 MYSQL_ENVIRONMENT = {
-    "MYSQL_ROOT_PASSWORD": config("MYSQL_ROOT_PASSWORD", "secret"),
-    "MYSQL_DATABASE": os.getenv("MYSQL_DATABASE", "default"),
+    "MYSQL_ROOT_PASSWORD": config("MYSQL_ROOT_PASSWORD", default="secret"),
+    "MYSQL_DATABASE": config("MYSQL_DATABASE", default="default"),
 }

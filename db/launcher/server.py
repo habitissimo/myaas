@@ -53,7 +53,9 @@ def inspect_database(template, name):
         port=db.external_port,
         user=db.user,
         password=db.password,
-        running=db.running())
+        running=db.running(),
+        status=db.container['Status'],
+        created=db.container['Created'])
 
 
 @app.route('/db/<template>/<name>', methods=['post'])
