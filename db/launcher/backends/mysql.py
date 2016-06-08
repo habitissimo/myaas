@@ -22,7 +22,7 @@ class MysqlDatabase(AbstractDatabase):
 
     @property
     def image(self):
-        return settings.MYSQL_DOCKER_IMAGE
+        return settings.MYSQL_IMAGE
 
     @property
     def internal_port(self):
