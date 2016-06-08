@@ -89,9 +89,6 @@ You can provide some configuration parameters trough environemnt variables.
  * **HOPS_DUMP_DIR**: Path where the application will look for sql files to import.
     * Default value: `/opt/hops/db/dumps`
      
- * **HOPS_TEMP_DIR**: Path where the application will store temporary data.
-    * Default value: `/opt/hops/db/tmp`
-
 **Warning:** You can replace the `MYSQL_DOCKER_IMAGE` by a custom one, but the code makes some asumptions on how to launch the database image, `habitissimo/myaas-mysql` image requires the following environment variables to be passed to work: `MYSQL_ROOT_PASSWORD`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`.
 
 Your image should be able to accept this environment variables (even if it will not use them) and shold not require aditional ones. The easiest way to customize the database settings is to create a derivate from habitissimo/myaas-mysql:10.1.

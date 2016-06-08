@@ -1,5 +1,5 @@
-from launcher.server import app
-from launcher.settings import DEBUG
+from myaas.server import app
+from myaas.settings import DEBUG
 
 app.debug = DEBUG
 

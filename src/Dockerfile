@@ -15,21 +15,10 @@ ADD requirements-dev.txt /code/
 RUN pip install -r requirements-dev.txt
 
 # copy all the rest
-ADD launcher /code/launcher/
-ADD tests /code/tests/
+ADD myaas /code/myaas/
 ADD docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 ADD runserver.py /code/
-
-ENV MYSQL_DOCKER_IMAGE habitissimo/myaas-mysql:10.1
-ENV MYSQL_ROOT_PASSWORD jiberish
-ENV MYSQL_DATABASE default
-ENV DOCKER_SOCKET unix://var/run/docker.sock
-
-# paths in host!
-ENV HOPS_DATA_DIR /opt/hops/db/data
-ENV HOPS_DUMP_DIR /opt/hops/db/dumps
-ENV HOPS_TEMP_DIR /opt/hops/db/tmp
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["gunicorn", "runserver:app", "-b", "0.0.0.0:5001", "--log-file=-", "--log-level=info", "-w=5", "--timeout=900"]

@@ -4,12 +4,12 @@ HOSTNAME := $(shell hostname -i)
 IMAGE=habitissimo/myaas
 DOCKER_RUN_FLAGS = --rm -e "HOST_NAME=$(HOSTNAME)"
 run     : DOCKER_RUN_FLAGS += -p 5001:5001 --name=dbm-server
-dev     : DOCKER_RUN_FLAGS += -p 5001:5001 -v "$(PWD):/code" -e "DEBUG=True" --name=launcher-server-dev
-shell   : DOCKER_RUN_FLAGS += -it -v "$(PWD):/code" --entrypoint=ipython --name=launcher-ipython
-bash    : DOCKER_RUN_FLAGS += -it -v "$(PWD):/code" --entrypoint=bash --name=launcher-bash
-flake   : DOCKER_RUN_FLAGS += -it -v "$(PWD):/code" --name=launcher-flake8
-tests   : DOCKER_RUN_FLAGS += -it -v "$(PWD):/code" --name=launcher-nosetest
-update  : DOCKER_RUN_FLAGS += -t --name=launcher-update
+dev     : DOCKER_RUN_FLAGS += -p 5001:5001 -v "$(PWD):/code" -e "DEBUG=True" --name=myaas-server-dev
+shell   : DOCKER_RUN_FLAGS += -it -v "$(PWD):/code" --entrypoint=ipython --name=myaas-ipython
+bash    : DOCKER_RUN_FLAGS += -it -v "$(PWD):/code" --entrypoint=bash --name=myaas-bash
+flake   : DOCKER_RUN_FLAGS += -it -v "$(PWD):/code" --name=myaas-flake8
+tests   : DOCKER_RUN_FLAGS += -it -v "$(PWD):/code" --name=myaas-nosetest
+update  : DOCKER_RUN_FLAGS += -t --name=myaas-update
 DOCKER_RUN=docker run $(DOCKER_RUN_FLAGS) \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	-v /opt/hops:/hops \

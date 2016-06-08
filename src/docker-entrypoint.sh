@@ -2,7 +2,7 @@
 
 case $1 in
   "update")
-    python -m launcher.update
+    python -m myaas.update
     exit 0
   ;;
 esac

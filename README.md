@@ -29,7 +29,7 @@ Finally the service responds with access data required to use the database.
 
 ## What you will find here:
 
- - **db**: databases as a service [read more](db/README.md)
+ - **src**: myaas source [read more](db/README.md)
  - **fabfile**: example client to interact with myaas [read more](fabfile/README.md)
 
 ## TODO
@@ -41,7 +41,7 @@ Finally the service responds with access data required to use the database.
 
 MyAAS has been designed with mysql in mind, but the implementation is database agnostic and can be adapted easily to work with any type of database which stores data in disk.
 
-Look for [MysqlDatabase adapter](db/launcher/backends/mysql.py) to have an idea of how easy is to support new databases, you just need to extend [AbstractDatabase](db/launcher/backends/__init__.py) and define a few properties.
+Look for [MysqlDatabase adapter](src/myaas/backends/mysql.py) to have an idea of how easy is to support new databases, you just need to extend [AbstractDatabase](src/myaas/backends/base.py) and define a few properties.
  
 ## Support
 

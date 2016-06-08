@@ -6,9 +6,20 @@ Maybe you will need to install some dependencies first, run `pip install -r requ
 
 # Configuration
 
-You will need to export an environment variable with the url to the launcher service.
+You will need to export an environment variable with the url to the myaas service.
 
 ```
-export DB_URL=http://replicator.example.com:5001
+export DB_URL=http://localhost:5001
+
+# show created databases
 fab db.ls
+
+# show available templates for new databases
+fab db.templates
+
+# create a new database foo from template bar
+fab db.new:bar,foo
+
+# delete the database
+fab db.rm:bar,foo
 ```

@@ -7,8 +7,8 @@ HOSTNAME = config('HOST_NAME')
 # to bind mount the docker socket
 DOCKER_SOCKET = config("DOCKER_SOCKET", default="unix://var/run/docker.sock")
 
-HOST_DATA_DIR = config("HOPS_DATA_DIR")
-HOST_DUMP_DIR = config("HOPS_DUMP_DIR")
+HOST_DATA_DIR = config("HOPS_DATA_DIR", default="/opt/hops/db/data")
+HOST_DUMP_DIR = config("HOPS_DUMP_DIR", default="/opt/hops/db/dumps")
 DATA_DIR = "/hops/db/data"
 DUMP_DIR = "/hops/db/dumps"
 
