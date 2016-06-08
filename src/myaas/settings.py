@@ -24,6 +24,11 @@ MYSQL_ENVIRONMENT = {
     "MYSQL_DATABASE": config("MYSQL_DATABASE", default="default"),
 }
 
+# Enable CPU pinning for created containers
+CPU_PINNING = config("CPU_PINNING", default=True, cast=bool)
+# How many CPUs to assign to every container
+CPU_PINNING_INSTANCE_CORES = config("CPU_PINNING_INSTANCE_CORES", default=2, cast=int)
+
 # Internal settings
 HOSTNAME = config('HOST_NAME', default='localhost')
 BASE_DIR = config('BASE_DIR', default='/myaas')

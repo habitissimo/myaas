@@ -5,7 +5,7 @@ from os.path import isdir, join as join_path
 from time import sleep
 
 from .. import settings
-from ..utils.container import find_container, translate_host_basedir
+from ..utils.container import find_container, translate_host_basedir, get_random_cpuset
 from ..utils.socket import reserve_port, test_tcp_connection
 from ..utils.filesystem import copy_tree, rm_tree, rename
 
@@ -41,6 +41,12 @@ class ContainerService():
     @property
     def labels(self):
         return {}
+
+    @property
+    def cpuset(self):
+        if not settings.CPU_PINNING:
+            return None
+        return get_random_cpuset()
 
     @property
     def memory_limit(self):
@@ -89,6 +95,7 @@ class ContainerService():
             volumes=self.volumes,
             environment=self.environment,
             labels=self.labels,
+            cpuset=self.cpuset,
             host_config=self.client.create_host_config(**host_config))
 
 
