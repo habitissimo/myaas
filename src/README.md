@@ -34,7 +34,7 @@ docker pull habitissimo/myaas-mysql:10.1
 docker run -d --name=myaas \
  -p 5001:5001 \
  -v "/var/run/docker.sock:/var/run/docker.sock" \
- -v "/opt/hops/db:/hops/db" \
+ -v "/opt/myaas:/myaas" \
  -e "HOST_NAME=`hostname`" \
  -e "MYSQL_DOCKER_IMAGE=habitissimo/myaas-mysql:10.1" \
  --restart=always \
@@ -51,7 +51,7 @@ At the end of your script put this:
 ```
 docker run -t --rm --name=myaas-update \
  -v "/var/run/docker.sock:/var/run/docker.sock" \
- -v "/opt/hops/db:/hops/db" \
+ -v "/opt/myaas:/myaas" \
  -e "MYSQL_DOCKER_IMAGE=habitissimo/myaas-mysql:10.1" \
  habitissimo/myaas update
 ```

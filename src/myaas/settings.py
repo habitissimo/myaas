@@ -1,16 +1,11 @@
 from decouple import config
 
+# Controls the debug mode of the application
 DEBUG = config('DEBUG', default=False, cast=bool)
-HOSTNAME = config('HOST_NAME')
 
 # Docker socket address, can be replaced with a TCP address iy you prefer not
 # to bind mount the docker socket
 DOCKER_SOCKET = config("DOCKER_SOCKET", default="unix://var/run/docker.sock")
-
-HOST_DATA_DIR = config("HOPS_DATA_DIR", default="/opt/hops/db/data")
-HOST_DUMP_DIR = config("HOPS_DUMP_DIR", default="/opt/hops/db/dumps")
-DATA_DIR = "/hops/db/data"
-DUMP_DIR = "/hops/db/dumps"
 
 # All containers created by this service will have this prefix in their name
 CONTAINER_PREFIX = 'myaas-'
@@ -28,3 +23,9 @@ MYSQL_ENVIRONMENT = {
     "MYSQL_ROOT_PASSWORD": config("MYSQL_ROOT_PASSWORD", default="secret"),
     "MYSQL_DATABASE": config("MYSQL_DATABASE", default="default"),
 }
+
+# Internal settings
+HOSTNAME = config('HOST_NAME', default='localhost')
+BASE_DIR = config('BASE_DIR', default='/myaas')
+DATA_DIR = BASE_DIR + "/data"
+DUMP_DIR = BASE_DIR + "/dumps"

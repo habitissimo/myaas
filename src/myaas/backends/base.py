@@ -1,108 +1,54 @@
-from abc import ABCMeta, abstractmethod, abstractproperty
-from subprocess import call
-import time
-import os
-import shutil
-import socket
 import logging
 
+from abc import ABCMeta, abstractmethod, abstractproperty
+from os.path import isdir, join as join_path
+from time import sleep
+
 from .. import settings
-from ..utils.container import find_container
+from ..utils.container import find_container, translate_host_basedir
+from ..utils.socket import reserve_port, test_tcp_connection
+from ..utils.filesystem import copy_tree, rm_tree, rename
+
 from .exceptions import (NonExistentDatabase, NonExistentTemplate,
                          NotReachableException, DBTimeoutException,
-                         ImportInProgress)
+                         ImportInProgress, ContainerRunning)
 
 
 logger = logging.getLogger(__name__)
 
 
-class AbstractDatabase(metaclass=ABCMeta):
-    """Abstract implementation for a database backend"""
+class ContainerService():
+    """
+    Convinience wrappers arround docker client API
+    """
+    def __init__(self, client, container_name):
+        self.client = client  # Docker client instance
+        self.container = find_container(container_name)
+        self.container_name = container_name
 
-    not_found_exception_class = NonExistentDatabase
+    @property
+    def ports(self):
+        return []
 
-    def __init__(self, docker_client, template, name, create=False):
-        self.client = docker_client
-        self.template = template
-        self.name = name
-        self.create = create
-        self.container_name = self._generate_container_name(template, name)
-        self.container = find_container(self.container_name)
-        if not self.container:
-            self.container = self._create_container()
+    @property
+    def volumes(self):
+        return []
 
-    @abstractproperty
-    def datadir(self):
-        pass
-
-    @abstractproperty
-    def image(self):
-        pass
-
-    @abstractproperty
+    @property
     def environment(self):
-        pass
-
-    @abstractproperty
-    def provider(self):
-        pass
-
-    @abstractproperty
-    def internal_port(self):
-        pass
-
-    @abstractproperty
-    def password(self):
-        pass
+        return {}
 
     @property
-    def container_path(self):
-        return os.path.join(settings.DATA_DIR, self.container_name)
+    def labels(self):
+        return {}
 
     @property
-    def host_path(self):
-        return os.path.join(settings.HOST_DATA_DIR, self.container_name)
-
-    @property
-    def mem_limit(self):
-        return '1g'
-
-    @property
-    def internal_ip(self):
-        return self.inspect()['NetworkSettings']['IPAddress']
-
-    @property
-    def external_ip(self):
-        return settings.HOSTNAME
+    def memory_limit(self):
+        return None
 
     @property
     def restart_policy(self):
-        return {"MaximumRetryCount": 0, "Name": "always"}
-
-    @property
-    def external_port(self):
-        port_name = '{}/tcp'.format(self.internal_port)
-        ports = self.inspect()['NetworkSettings']['Ports']
-        if not ports:
-            return None
-        elif port_name not in ports:
-            return None
-        return ports[port_name][0]["HostPort"]
-
-    @property
-    def user(self):
-        return "root"
-
-    @property
-    def database(self):
-        return "default"
-
-    @abstractmethod
-    def test_connection(self, timeout=1):
-        if not self.internal_port:
-            raise NotReachableException("Could not find container port")
-        if not self.internal_ip:
-            raise NotReachableException("Could not find container IP, is container running?")
+        return None
 
     def start(self):
         self.client.start(self.container)
@@ -114,147 +60,194 @@ class AbstractDatabase(metaclass=ABCMeta):
     def running(self):
         return self.inspect()['State']['Running']
 
-    def destroy(self):
+    def remove(self):
         if self.running():
             self.stop()
+
         self.client.remove_container(self.container)
         self.container = None
 
-    def purge(self):
-        if self.container:
-            self.destroy()
-
-        if self._datadir_created():
-            self._delete_volume_data()
-
-    def wait_until_active(self):
-        tries = 0
-        while tries < 30:
-            if self.test_connection():
-                return
-            time.sleep(5)
-            tries += 1
-
-        raise DBTimeoutException("Could not connect with database, max retries reached")
-
     def inspect(self):
-        data = self.client.inspect_container(self.container)
-        if not data:
-            raise Exception("Docker inspect data not available")
-        return data
+        return self.client.inspect_container(self.container)
 
-    def backup_datadir(self, move=False):
+    def make_host_config(self):
+        return {
+            "port_bindings": {port: reserve_port() for port in self.ports},
+            "mem_limit": self.memory_limit,
+            "restart_policy": self.restart_policy,
+        }
+
+    def create_container(self, image):
+        host_config = self.make_host_config()
+        # remove empty properties from config dict
+        host_config = {k: v for k, v in host_config.items() if v}
+
+        return self.client.create_container(
+            image=image,
+            name=self.container_name,
+            ports=self.ports,
+            volumes=self.volumes,
+            environment=self.environment,
+            labels=self.labels,
+            host_config=self.client.create_host_config(**host_config))
+
+
+class PersistentContainerService(ContainerService):
+    @property
+    def datadir(self):
+        return "/tmp"
+
+    @property
+    def backupdir(self):
+        return join_path(settings.DATA_DIR, 'backup-' + self.container_name)
+
+    @property
+    def host_datadir(self):
+        return join_path(settings.DATA_DIR, self.container_name)
+
+    @property
+    def volumes(self):
+        return [self.datadir]
+
+    def remove(self):
+        super().remove()
+        if isdir(self.host_datadir):
+            rm_tree(self.host_datadir)
+
+    def make_bindings_config(self):
+        # host_datadir needs to be translated as the docker daemon runs on the
+        # host and does not see the host directories trough a binded volume
+        host_datadir = translate_host_basedir(self.host_datadir)
+        return {host_datadir: {'bind': self.datadir, 'ro': False}}
+
+    def make_host_config(self):
+        config = super().make_host_config()
+        config['binds'] = self.make_bindings_config()
+        return config
+
+    def do_backup(self, use_rename=False):
         if self.running():
-            self.stop()
-
-        backup_path = self._get_backup_path()
+            raise ContainerRunning()
 
         # remove previous backup if exists
         self.remove_backup()
 
-        if not os.path.isdir(self.container_path):
+        if not isdir(self.host_datadir):
             return  # nothing to backup
 
-        if move:
-            call(["mv", self.container_path, backup_path])
+        if use_rename:
+            rename(self.host_datadir, self.backupdir)
         else:
-            # reflink=auto will use copy on write if supported
-            call(["cp", "-r", "--reflink=auto", self.container_path, backup_path])
+            copy_tree(self.host_datadir, self.backupdir)
 
     def remove_backup(self):
-        backup_path = self._get_backup_path()
-        if os.path.isdir(backup_path):
-            call(["rm", "-rf", backup_path])
+        if isdir(self.backupdir):
+            rm_tree(self.backupdir)
 
-    def restore_datadir(self):
+    def restore_backup(self):
         if self.running():
-            self.stop()
+            raise ContainerRunning()
 
-        backup_dir = self._get_backup_path()
-
-        if not os.path.isdir(backup_dir):
+        if not isdir(self.backupdir):
             return False
 
-        call(["rm", "-rf", self.container_path])
-        call(["mv", backup_dir, self.container_path])
+        rm_tree(self.host_datadir)
+        rename(self.backupdir, self.host_datadir)
+
         return True
 
-    def _get_backup_path(self):
-        parent_dir, data_dir = os.path.split(self.container_path)
-        data_dir = 'backup-{}'.format(data_dir)
-        return os.path.join(parent_dir, data_dir)
 
-    def _create_container(self):
-        if not self.create:
-            raise self.not_found_exception_class()
+class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
+    """Abstract implementation for a database backend"""
 
-        return self.client.create_container(
-            image=self.image,
-            name=self.container_name,
-            environment=self.environment,
-            ports=[self.internal_port],
-            volumes=[self.datadir],
-            host_config=self._get_host_config_definition(),
-            labels=self._get_container_labels())
+    not_found_exception_class = NonExistentDatabase
 
-    def _generate_container_name(self, template, name=None):
-        if name:
-            return '%s%s-%s' % (settings.CONTAINER_PREFIX, template, name)
-        else:
-            return '%s%s' % (settings.CONTAINER_PREFIX, template)
+    def __init__(self, client, template, name, create=False):
+        container_name = self._make_container_name(template, name)
 
-    def _get_volumes_definition(self):
-        return [self.datadir]
+        super().__init__(client, container_name)
 
-    def _get_host_config_definition(self):
-        "create host_config object with permanent port mapping"
-        host_config = self.client.create_host_config(
-            port_bindings={
-                self.internal_port: self._get_free_port(),
-            },
-            binds={
-                self.host_path: {'bind': self.datadir, 'ro': False}
-            },
-            mem_limit=self.mem_limit,
-            restart_policy=self.restart_policy
-        )
-        logger.debug(host_config)
+        self.template = template
+        self.name = name
+        self.create = create
+        if not self.container:
+            if not self.create:
+                raise self.not_found_exception_class()
+            self.container = self.create_container(self.image)
 
-        return host_config
+    @abstractproperty
+    def datadir(self):
+        pass
 
-    def _get_port_bindings(self):
-        return {self.internal_port: ('0.0.0.0',)}
+    @abstractproperty
+    def image(self):
+        pass
 
-    def _get_container_labels(self):
+    @abstractproperty
+    def provider_name(self):
+        pass
+
+    @abstractproperty
+    def service_port(self):
+        pass
+
+    @property
+    def internal_ip(self):
+        return self.inspect()['NetworkSettings']['IPAddress']
+
+    @property
+    def restart_policy(self):
+        return {"MaximumRetryCount": 0, "Name": "always"}
+
+    @property
+    def ports(self):
+        return [self.service_port]
+
+    @property
+    def labels(self):
         return {
-            'com.myaas.provider': self.provider,
+            'com.myaas.provider': self.provider_name,
             'com.myaas.is_template': 'False',
             'com.myaas.template': self.template,
             'com.myaas.instance': self.name,
         }
 
-    def _datadir_created(self):
-        return os.path.isdir(self.container_path)
+    @property
+    def host_port(self):
+        port_name = '{}/tcp'.format(self.service_port)
+        ports = self.inspect()['NetworkSettings']['Ports']
+        if not ports:
+            return None
+        elif port_name not in ports:
+            return None
+        return ports[port_name][0]["HostPort"]
 
-    def _delete_volume_data(self):
-        shutil.rmtree(self.container_path)
-
-    def _get_free_port(self):
+    def test_connection(self, timeout=1):
         """
-        This method finds a free port number for new containers to be created,
-        it releases the port just before returning the port number, so there is
-        a chance for another process to get it, let's see if it works.
-
-        This requires the myaas container to be running with --net=host otherwise
-        the port returned by this method will be a free port inside the container,
-        but may not be free on the host machine.
+        Checks if the service running inside the container is accepting connections
         """
-        s = socket.socket()
-        s.bind(("", 0))
-        (ip, port) = s.getsockname()
-        s.close()
-        logger.debug("Assigning port {}".format(port))
-        return port
+        if not self.service_port:
+            raise NotReachableException("Could not find container port")
+        if not self.internal_ip:
+            raise NotReachableException("Could not find container IP, is container running?")
+
+        return test_tcp_connection(self.internal_ip, self.service_port)
+
+    def wait_for_service_listening(self):
+        tries = 0
+        while tries < 30:
+            if self.test_connection():
+                return
+            sleep(5)
+            tries += 1
+
+        raise DBTimeoutException("Could not connect with database, max retries reached")
+
+    def _make_container_name(self, template, name):
+        container_name = settings.CONTAINER_PREFIX + template
+        if name:
+            container_name += '-' + name
+        return container_name
 
 
 class AbstractDatabaseTemplate(AbstractDatabase):
@@ -267,13 +260,17 @@ class AbstractDatabaseTemplate(AbstractDatabase):
     def __init__(self, docker_client, template, create=False):
         super().__init__(docker_client, template, None, create)
 
-    @property
-    def restart_policy(self):
-        return {"MaximumRetryCount": 0, "Name": "no"}
+    def clone(self, name):
+        if self.running():
+            raise ImportInProgress
 
-    @abstractproperty
-    def database_backend(self):
-        pass
+        database = self.database_backend(self.client, self.template, name, create=True)
+
+        template_data_path = join_path(self.host_datadir, '.')
+
+        copy_tree(template_data_path, database.host_datadir)
+
+        return database
 
     @abstractmethod
     def import_data(self, sql_file):
@@ -283,22 +280,18 @@ class AbstractDatabaseTemplate(AbstractDatabase):
     def get_engine_status(self):
         pass
 
-    def _get_container_labels(self):
+    @abstractproperty
+    def database_backend(self):
+        pass
+
+    @property
+    def labels(self):
         return {
             'com.myaas.is_template': 'True',
-            'com.myaas.provider': self.provider,
+            'com.myaas.provider': self.provider_name,
             'com.myaas.template': self.template,
         }
 
-    def clone(self, name):
-        if self.running():
-            raise ImportInProgress
-
-        database = self.database_backend(self.client, self.template, name, create=True)
-
-        template_data_path = os.path.join(self.container_path, '.')
-        db_data_path = database.container_path
-        # reflink=auto will use copy on write if supported
-        call(["cp", "-r", "--reflink=auto", template_data_path, db_data_path])
-
-        return database
+    @property
+    def restart_policy(self):
+        return {"MaximumRetryCount": 0, "Name": "no"}

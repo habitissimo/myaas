@@ -20,3 +20,7 @@ class ImportDataError(Exception):
 
 class NotReachableException(Exception):
     pass
+
+
+class ContainerRunning(Exception):
+    pass

@@ -30,8 +30,10 @@ def remove_recreate_database(template):
     """
     try:
         db = MysqlDatabaseTemplate(client, template, False)
-        db.backup_datadir(move=True)
-        db.destroy()
+        if db.running():
+            db.stop()
+        db.do_backup(use_rename=True)
+        db.remove()
     except NonExistentTemplate:
         pass  # this means this database is being imported for the first time
 
@@ -53,10 +55,10 @@ def main():
 
         try:
             print(indent("* Waiting for database to accept connections"))
-            db.wait_until_active()
+            db.wait_for_service_listening()
         except:
             db.stop()
-            db.restore_datadir()
+            db.restore_backup()
             print_exception()
             continue
 
@@ -69,7 +71,7 @@ def main():
             print(db.get_engine_status(), file=sys.stderr)
             print(indent("* Restoring previous database", level=2))
             db.stop()
-            db.restore_datadir()
+            db.restore_backup()
             print_exception()
             continue
 

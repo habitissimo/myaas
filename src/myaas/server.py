@@ -1,5 +1,6 @@
 from flask import Flask, Response, request, jsonify, abort
 
+from .settings import HOSTNAME
 from .utils.container import client
 from .utils.database import get_myaas_containers
 from .utils.database import list_databases, list_database_templates
@@ -49,8 +50,8 @@ def inspect_database(template, name):
 
     return jsonify(
         database=db.database,
-        host=db.external_ip,
-        port=db.external_port,
+        host=HOSTNAME,
+        port=db.host_port,
         user=db.user,
         password=db.password,
         running=db.running(),
@@ -90,7 +91,7 @@ def create_database(template, name):
 def remove_database(template, name):
     try:
         db = MysqlDatabase(client, template, name)
-        db.purge()
+        db.remove()
     except NonExistentDatabase:
         abort(404)
 

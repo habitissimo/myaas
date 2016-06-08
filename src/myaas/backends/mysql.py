@@ -9,7 +9,7 @@ from .exceptions import ImportDataError
 
 class MysqlDatabase(AbstractDatabase):
     @property
-    def provider(self):
+    def provider_name(self):
         return "mysql"
 
     @property
@@ -25,15 +25,23 @@ class MysqlDatabase(AbstractDatabase):
         return settings.MYSQL_IMAGE
 
     @property
-    def internal_port(self):
+    def service_port(self):
         return 3306
+
+    @property
+    def user(self):
+        return "root"
 
     @property
     def password(self):
         return settings.MYSQL_ENVIRONMENT['MYSQL_ROOT_PASSWORD']
 
     @property
-    def mem_limit(self):
+    def database(self):
+        return settings.MYSQL_ENVIRONMENT['MYSQL_DATABASE']
+
+    @property
+    def memory_limit(self):
         return '3g'
 
     def test_connection(self):
@@ -41,7 +49,7 @@ class MysqlDatabase(AbstractDatabase):
         try:
             conn = pymysql.connect(
                 host=self.internal_ip,
-                port=self.internal_port,
+                port=self.service_port,
                 user=self.user,
                 passwd=self.password,
                 db=self.database)
@@ -76,7 +84,7 @@ class MysqlDatabaseTemplate(MysqlDatabase, AbstractDatabaseTemplate):
                 "--user={}".format(self.user),
                 "--password={}".format(self.password),
                 "--host={}".format(self.internal_ip),
-                "--port={}".format(self.internal_port),
+                "--port={}".format(self.service_port),
                 self.database]
 
     def _run_command(self, command, stdin=None):

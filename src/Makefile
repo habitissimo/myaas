@@ -12,7 +12,7 @@ tests   : DOCKER_RUN_FLAGS += -it -v "$(PWD):/code" --name=myaas-nosetest
 update  : DOCKER_RUN_FLAGS += -t --name=myaas-update
 DOCKER_RUN=docker run $(DOCKER_RUN_FLAGS) \
 	-v /var/run/docker.sock:/var/run/docker.sock \
-	-v /opt/hops:/hops \
+	-v /opt/myaas:/myaas \
 	$(IMAGE)
 
 # build the image
