@@ -63,12 +63,15 @@ class ContainerService():
         self.client.stop(self.container)
         self.client.wait(self.container)
 
+    def kill(self):
+        self.client.kill(self.container)
+
     def running(self):
         return self.inspect()['State']['Running']
 
     def remove(self):
         if self.running():
-            self.stop()
+            self.kill()
 
         self.client.remove_container(self.container)
         self.container = None
