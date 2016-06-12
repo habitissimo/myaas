@@ -45,7 +45,7 @@ The first time you lauch it it will have no databases or templates, to add some 
 
 # Updating template databases
 
-Run a cron to rsync mysqldump files to `/opt/hops/db/dumps`, your cron will execute on the host machine, so make sure to adapt the path as necesary, depending on the volume mapping you are using.
+Run a cron to rsync mysqldump files to `/opt/myaas/dumps`, your cron will execute on the host machine, so make sure to adapt the path as necesary, depending on the volume mapping you are using.
 
 At the end of your script put this:
 ```
@@ -60,13 +60,13 @@ While the base databases are being updated you can't interact with the service, 
 
 # Volumes
 
-`/hops/db/dumps`
+`/myaas/dumps`
   Contains the sqldumps to import when creating a new database. The file has to be named like {template_name}.sql
 
-`/hops/db/data`
+`/myaas/data`
   Contains binary data for each database created.
-  Base image for any template will be in `/hops/db/data/{template_name}`.
-  Copies derived from in will be stored in `/hops/db/data/{template_name}-{instance_name}`.
+  Base image for any template will be in `/myaas/data/{template_name}`.
+  Copies derived from in will be stored in `/myaas/data/{template_name}-{instance_name}`.
 
 # Environment variables
 
@@ -82,13 +82,7 @@ You can provide some configuration parameters trough environemnt variables.
     
  * **MYSQL_DATABASE**: name of the database to create. (The name is the same always for all instances from all templates, yo will identify them by container name).
     * Default value: default
-    
- * **HOPS_DATA_DIR**: Path where the application will store database instances.
-    * Default value: `/opt/hops/db/data`
-    
- * **HOPS_DUMP_DIR**: Path where the application will look for sql files to import.
-    * Default value: `/opt/hops/db/dumps`
      
-**Warning:** You can replace the `MYSQL_DOCKER_IMAGE` by a custom one, but the code makes some asumptions on how to launch the database image, `habitissimo/myaas-mysql` image requires the following environment variables to be passed to work: `MYSQL_ROOT_PASSWORD`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`.
+**Warning:** You can replace the `MYSQL_DOCKER_IMAGE` by a custom one, but the code makes some asumptions on how to launch the database image, `habitissimo/myaas-mysql` image requires the following environment variables to be passed to work: `MYSQL_ROOT_PASSWORD`, `MYSQL_DATABASE`.
 
-Your image should be able to accept this environment variables (even if it will not use them) and shold not require aditional ones. The easiest way to customize the database settings is to create a derivate from habitissimo/myaas-mysql:10.1.
+Your image should be able to accept this environment variables (even if it will not use them) and should not require aditional ones. The easiest way to customize the database settings is to create a derivate from habitissimo/myaas-mysql:10.1.
