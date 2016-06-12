@@ -28,8 +28,8 @@ def translate_host_basedir(path):
     # improve self id detection in the future.
     self_id = getenv('HOSTNAME')
     self_container = client.containers(filters={'id': self_id})[0]
-
-    for mount in self_container['Mounts']:
+    mount_config = client.inspect_container(self_container)['Mounts']
+    for mount in mount_config:
         if mount['Destination'] == settings.BASE_DIR:
             break
 
