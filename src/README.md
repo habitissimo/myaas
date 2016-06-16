@@ -78,7 +78,7 @@ You can provide some configuration parameters trough environemnt variables.
     * Default value: habitissimo/myaas-mysql:10.1
     
  * **MYSQL_ROOT_PASSWORD**: the password to be set for root access in create databases.
-    * Default value: jiberish
+    * Default value: secret
     
  * **MYSQL_DATABASE**: name of the database to create. (The name is the same always for all instances from all templates, yo will identify them by container name).
     * Default value: default
