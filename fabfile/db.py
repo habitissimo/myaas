@@ -1,12 +1,15 @@
 import requests
 import pprint
 import sys
+from datetime import datetime
 try:
     from urllib.parse import urljoin
 except:
     from urlparse import urljoin
 
 from fabric.api import env
+from ago import human
+from tabulate import tabulate
 from taskset import TaskSet, task_method
 
 
@@ -59,12 +62,12 @@ class DBProvider(TaskSet):
         if response.status_code == 304:
             print("This database already exists")
             return
-        pprint.pprint(response.json())
+        self._print_single_db(response.json())
 
-    @task_method
+    @task_method(alias="show")
     def info(self, template, name):
         response = self.client.get('/db/{template}/{name}'.format(**locals()))
-        pprint.pprint(response.json())
+        self._print_single_db(response.json())
 
     @task_method
     def shell(self, template, name):
@@ -80,7 +83,14 @@ class DBProvider(TaskSet):
     @task_method
     def ls(self):
         response = self.client.get('/db')
-        pprint.pprint(response.json()[u'databases'])
+        headers = ["Template", "Name", "Status", "Created"]
+        table = []
+        for db in response.json()[u'databases']:
+            db['created'] = datetime.fromtimestamp(db['created'])
+            human_date = human(db['created'], precision=1)
+            table.append([db['template'], db['name'], db['state'], human_date])
+
+        print tabulate(table, headers)
 
     @task_method
     def templates(self):
@@ -92,3 +102,15 @@ class DBProvider(TaskSet):
         response = self.client.get('/db/{template}/{name}'.format(**locals()),
                                    params={'all': True})
         pprint.pprint(response.json())
+
+    def _print_single_db(self, json_data):
+        table = [
+            ('Host', json_data['host']),
+            ('Port', json_data['port']),
+            ('User', json_data['user']),
+            ('Password', json_data['password']),
+            ('Database', json_data['database']),
+            ('Running', json_data['running'])
+        ]
+
+        print(tabulate(table, tablefmt='simple'))
