@@ -1,0 +1,11 @@
+myaas:
+  build: .
+  environment:
+    - DEBUG=1
+    - TZ=Europe/Madrid
+    - HOST_NAME=127.0.0.1
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - .:/code/
+  ports:
+    - 5001:5001
