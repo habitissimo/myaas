@@ -32,6 +32,6 @@ Required:
 * **MYAAS_NAME**: a name for the instance to be created
 
 Optional:
-* **MYAAS_NO_REMOVE**: do not remove created database on stop
-* **MYAAS_WAIT_TIMEOUT**: max wait time in seconds until server is alive (default is 15)
-* **MYAAS_DEBUG**: set to 1 to print debug information
+* **MYAAS_NO_REMOVE**: (default is 0) do not remove created database on stop
+* **MYAAS_WAIT_TIMEOUT**: (default is 15) max wait time in seconds until server is alive
+* **MYAAS_DEBUG**: (default is 0) set to 1 to print debug information about curl requests
