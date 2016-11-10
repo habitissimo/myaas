@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.6
 
 RUN apt-get update -y && \
     apt-get install -y mysql-client postgresql-client && \
