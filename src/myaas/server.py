@@ -71,6 +71,9 @@ def inspect_database(template, name):
 @app.route('/db/<template>/<name>', methods=['post'])
 def create_database(template, name):
     logger.debug(f'requested create DB from "{template}" as "{name}"')
+    ttl = request.form.get("ttl")
+    if ttl:
+        ttl = int(ttl)
     database_class = get_enabled_backend().Database
     try:
         db = database_class(client, template, name)
@@ -85,7 +88,7 @@ def create_database(template, name):
     try:
         template_db = template_class(client, template)
         logger.debug(f'found template "{template}"')
-        db = template_db.clone(name)
+        db = template_db.clone(name, ttl=ttl)
         logger.debug(f'starting database "{template}" => "{name}"')
         db.start()
     except ImportInProgress:

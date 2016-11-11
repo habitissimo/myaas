@@ -4,6 +4,7 @@ import subprocess
 from abc import ABCMeta, abstractmethod, abstractproperty
 from os.path import isdir, join as join_path
 from time import sleep
+from datetime import datetime, timedelta
 
 from .. import settings
 from ..utils.container import find_container, translate_host_basedir, get_random_cpuset
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class ContainerService():
     """
-    Convinience wrappers arround docker client API
+    Convenience wrappers arround docker client API
     """
     def __init__(self, client, container_name):
         self.client = client  # Docker client instance
@@ -91,7 +92,6 @@ class ContainerService():
         host_config = self.make_host_config()
         # remove empty properties from config dict
         host_config = {k: v for k, v in host_config.items() if v}
-
         return self.client.create_container(
             image=image,
             name=self.container_name,
@@ -173,7 +173,7 @@ class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
 
     not_found_exception_class = NonExistentDatabase
 
-    def __init__(self, client, template, name, create=False):
+    def __init__(self, client, template, name, create=False, ttl=None):
         container_name = self._make_container_name(template, name)
 
         super().__init__(client, container_name)
@@ -181,6 +181,10 @@ class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
         self.template = template
         self.name = name
         self.create = create
+        if isinstance(ttl, int) and ttl == 0:
+            self.ttl = 0
+        else:
+            self.ttl = ttl or settings.CONTAINER_TTL
         if not self.container:
             if not self.create:
                 raise self.not_found_exception_class()
@@ -216,11 +220,13 @@ class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
 
     @property
     def labels(self):
+        expire_at = datetime.now() + timedelta(seconds=self.ttl)
         return {
             'com.myaas.provider': self.provider_name,
             'com.myaas.is_template': 'False',
             'com.myaas.template': self.template,
             'com.myaas.instance': self.name,
+            'com.myaas.expiresAt': str(expire_at.timestamp()),
         }
 
     @property
@@ -269,13 +275,15 @@ class AbstractDatabaseTemplate(AbstractDatabase):
     not_found_exception_class = NonExistentTemplate
 
     def __init__(self, docker_client, template, create=False):
-        super().__init__(docker_client, template, None, create)
+        super().__init__(docker_client, template, None, create, ttl=0)
 
-    def clone(self, name):
+    def clone(self, name, ttl=None):
         if self.running():
             raise ImportInProgress
 
-        database = self.database_backend(self.client, self.template, name, create=True)
+        database = self.database_backend(
+            self.client, self.template,
+            name, create=True, ttl=ttl)
 
         template_data_path = join_path(self.host_datadir, '.')
 

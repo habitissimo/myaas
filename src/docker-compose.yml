@@ -15,4 +15,4 @@ services:
       - 5001:5001
   daemon:
     extends: myaas_base
-    entrypoint: python -m myaas.myaas
+    entrypoint: python -m myaas.daemon
