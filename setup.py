@@ -3,9 +3,10 @@ from setuptools import setup
 setup(
     name="MyAas",
     version="0.1b",
-    packages=[
-        "src/myaas"
-    ],
+    package_data={
+        'myaas': 'src/myaas/*',
+    },
+    include_package_data=True,
     install_requires=[
         "Flask",
         "requests",
