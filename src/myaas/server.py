@@ -46,12 +46,12 @@ def show_templates():
 
 @app.route('/db/<template>/<name>', methods=['get'])
 def inspect_database(template, name):
-    logger.debug("requested inspect DB for: \"{template}\" => \"{name}\"".format(**locals()))
+    logger.debug(f'requested inspect DB for: "{template}" => "{name}"')
     database = get_enabled_backend().Database
     try:
         db = database(client, template, name)
     except NonExistentDatabase:
-        logger.debug("database not found \"{template}\" => \"{name}\"".format(**locals()))
+        logger.debug(f'database not found "{template}" => "{name}"')
         abort(404)
 
     if request.args.get('all'):
@@ -70,11 +70,14 @@ def inspect_database(template, name):
 
 @app.route('/db/<template>/<name>', methods=['post'])
 def create_database(template, name):
-    logger.debug("requested create DB from \"{template}\" as \"{name}\"".format(**locals()))
+    logger.debug(f'requested create DB from "{template}" as "{name}"')
+    ttl = request.form.get("ttl")
+    if ttl:
+        ttl = int(ttl)
     database_class = get_enabled_backend().Database
     try:
         db = database_class(client, template, name)
-        logger.warning("already exists \"{template}\" as \"{name}\"".format(**locals()))
+        logger.warning(f'already exists "{template}" as "{name}"')
         response = Response(status=304)  # not modified
         del response.headers['content-type']
         return response
@@ -84,18 +87,18 @@ def create_database(template, name):
     template_class = get_enabled_backend().Template
     try:
         template_db = template_class(client, template)
-        logger.debug("found template \"{template}\"".format(**locals()))
-        db = template_db.clone(name)
-        logger.debug("starting database \"{template}\" => \"{name}\"".format(**locals()))
+        logger.debug(f'found template "{template}"')
+        db = template_db.clone(name, ttl=ttl)
+        logger.debug(f'starting database "{template}" => "{name}"')
         db.start()
     except ImportInProgress:
-        logger.error("requested template \"{template}\" not available, import in progress".format(**locals()))
+        logger.error(f'requested template "{template}" not available, import in progress')
         response = jsonify(status="Database not available, content is being imported.")
         response.status_code = 500
         return response
     except NonExistentTemplate:
-        logger.error("requested template \"{template}\" not found".format(**locals()))
-        response = jsonify(status="Template \"{0}\" does not exists.".format(template))
+        logger.error(f'requested template "{template}" not found')
+        response = jsonify(status=f'Template "{template}" does not exist.')
         response.status_code = 500
         return response
 
@@ -106,14 +109,14 @@ def create_database(template, name):
 
 @app.route('/db/<template>/<name>', methods=['delete'])
 def remove_database(template, name):
-    logger.debug("requested delete DB \"{template}\" => \"{name}\"".format(**locals()))
+    logger.debug(f'requested delete DB "{template}" => "{name}"')
     database_class = get_enabled_backend().Database
     try:
         db = database_class(client, template, name)
         db.remove()
         logger.debug("removed")
     except NonExistentDatabase:
-        logger.debug("database not found \"{template}\" => \"{name}\"".format(**locals()))
+        logger.debug(f'database not found "{template}" => "{name}"')
         abort(404)
 
     response = Response(status=204)

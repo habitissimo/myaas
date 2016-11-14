@@ -41,7 +41,7 @@ docker run -d --name=myaas \
   habitissimo/myaas
 ```
 
-The first time you lauch it it will have no databases or templates, to add some templates read the next section.
+The first time you launch it it will have no databases or templates, to add some templates read the next section.
 
 # Updating template databases
 

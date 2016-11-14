@@ -15,6 +15,8 @@ DOCKER_SOCKET = config("DOCKER_SOCKET", default="unix://var/run/docker.sock")
 
 # All containers created by this service will have this prefix in their name
 CONTAINER_PREFIX = 'myaas-'
+# Default time that a container stays up, in seconds.
+CONTAINER_TTL = 60 * 60 * 48 # 2 days
 
 # Default docker imgage for the mysql backend
 # Currently tested with:
