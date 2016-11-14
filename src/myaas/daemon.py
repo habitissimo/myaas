@@ -2,12 +2,23 @@ import threading
 from time import sleep
 from datetime import datetime
 import signal
+import logging
+import os
 
 from .utils.database import (
     get_myaas_containers,
     get_enabled_backend,
 )
 from .utils.container import client
+from .settings import DEBUG
+
+
+logging.basicConfig(
+    format='%(asctime)s %(name)s %(levelname)s: %(message)s'.format(os.getpid()),
+    level=logging.DEBUG if DEBUG else logging.WARNING)
+logging.getLogger('requests').setLevel(logging.CRITICAL)
+logging.getLogger('docker').setLevel(logging.CRITICAL)
+logger = logging.getLogger("myaas-daemon")
 
 
 class SignalHandler:
@@ -23,7 +34,6 @@ class SignalHandler:
             self.register_signals()
 
     def stop(self, signum, frame):
-        print("STOPPING.....")
         self.__should_run = False
 
     def register_signals(self):
@@ -37,6 +47,7 @@ class Daemon():
         self.sighandler = sighandler
 
     def remove_container(self, template, name):
+        logger.debug(f'removing {name}')
         database_class = get_enabled_backend().Database
         db = database_class(client, template, name)
         db.remove()
