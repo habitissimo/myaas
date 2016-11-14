@@ -220,14 +220,16 @@ class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
 
     @property
     def labels(self):
-        expire_at = datetime.now() + timedelta(seconds=self.ttl)
-        return {
+        labels =  {
             'com.myaas.provider': self.provider_name,
             'com.myaas.is_template': 'False',
             'com.myaas.template': self.template,
             'com.myaas.instance': self.name,
-            'com.myaas.expiresAt': str(expire_at.timestamp()),
         }
+        if self.ttl:
+            expire_at = datetime.now() + timedelta(seconds=self.ttl)
+            labels.update({'com.myaas.expiresAt': str(expire_at.timestamp())})
+        return labels
 
     @property
     def host_port(self):
