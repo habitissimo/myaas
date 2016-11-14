@@ -78,7 +78,4 @@ class Daemon():
 if __name__ == '__main__':
     sighandler = SignalHandler()
     daemon = Daemon(sighandler)
-    daemon_thread = threading.Thread(
-        name='myaas_daemon', target=daemon)
-    daemon_thread.setDaemon(False)
-    daemon_thread.start()
+    daemon.start()
