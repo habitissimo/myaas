@@ -5,6 +5,10 @@ case $1 in
     python -m myaas.update
     exit 0
   ;;
+  "daemon")
+    python -m myaas.daemon
+    exit 0
+  ;;
 esac
 
 if [ -z $HOST_NAME ]; then

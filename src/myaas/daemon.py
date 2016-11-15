@@ -67,6 +67,7 @@ class Daemon():
                 self.remove_container(template, name)
 
     def start(self):
+        logger.debug("Starting myaas daemon...")
         while self.sighandler.should_run:
             self.remove_expired_containers()
             sleep(1)
