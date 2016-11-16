@@ -15,7 +15,7 @@ from .settings import DEBUG
 
 logging.basicConfig(
     format='%(asctime)s %(name)s %(levelname)s: %(message)s'.format(os.getpid()),
-    level=logging.DEBUG if DEBUG else logging.WARNING)
+    level=logging.DEBUG if DEBUG else logging.INFO)
 logging.getLogger('requests').setLevel(logging.CRITICAL)
 logging.getLogger('docker').setLevel(logging.CRITICAL)
 logger = logging.getLogger("myaas-daemon")
@@ -47,7 +47,7 @@ class Daemon():
         self.sighandler = sighandler
 
     def remove_container(self, template, name):
-        logger.debug(f'removing {name}')
+        logger.info(f'removing {name}')
         database_class = get_enabled_backend().Database
         db = database_class(client, template, name)
         db.remove()
@@ -67,7 +67,7 @@ class Daemon():
                 self.remove_container(template, name)
 
     def start(self):
-        logger.debug("Starting myaas daemon...")
+        logger.info("Starting myaas daemon...")
         while self.sighandler.should_run:
             self.remove_expired_containers()
             sleep(1)
