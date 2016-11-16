@@ -35,3 +35,4 @@ Optional:
 * **MYAAS_NO_REMOVE**: (default is 0) do not remove created database on stop
 * **MYAAS_WAIT_TIMEOUT**: (default is 15) max wait time in seconds until server is alive
 * **MYAAS_DEBUG**: (default is 0) set to 1 to print debug information about curl requests
+* **MYAAS_TTL**: in seconds (default is 0), set to 0 to avoid the deletion of the database

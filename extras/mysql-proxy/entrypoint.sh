@@ -4,6 +4,7 @@ set -e
 export MYAAS_WAIT_TIMEOUT=${MYAAS_WAIT_TIMEOUT:-15}
 export MYAAS_DEBUG=${MYAAS_DEBUG:-0}
 export MYAAS_NO_REMOVE=${MYAAS_NO_REMOVE:-0}
+export MYAAS_TTL=${MYAAS_TTL:-0}
 export CURL="curl --dump-header /tmp/headers.txt --fail --silent"
 export PID=0
 
@@ -35,7 +36,7 @@ create_database()
 {
   local ret=0
   print_ts "* Creating database"
-  JSON=`$CURL --form ttl=7200 ${MYAAS_URL}/db/${MYAAS_TEMPLATE}/${MYAAS_NAME}` || ret=$?
+  JSON=`$CURL --form ttl=${MYAAS_TTL} ${MYAAS_URL}/db/${MYAAS_TEMPLATE}/${MYAAS_NAME}` || ret=$?
   debug_last_request $ret
   if [ -z "$JSON" ]; then
     print_ts "  - [ERROR] Empty server response"
