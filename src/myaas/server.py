@@ -29,12 +29,15 @@ def hello_world():
 def show_databases():
     databases = []
     for c in get_myaas_containers():
-        databases.append({
+        db = {
             'template': c['Labels']['com.myaas.template'],
             'name': c['Labels']['com.myaas.instance'],
             'state': c['Status'],
             'created': c['Created'],
-        })
+        }
+        if 'com.myaas.expiresAt' in c['Labels']:
+            db.update({'expires_at': c['Labels']['com.myaas.expiresAt']})
+        databases.append(db)
 
     return jsonify(databases=databases)
 
@@ -57,7 +60,7 @@ def inspect_database(template, name):
     if request.args.get('all'):
         return jsonify(container=db.inspect())
 
-    return jsonify(
+    result = dict(
         database=db.database,
         host=HOSTNAME,
         port=db.host_port,
@@ -65,7 +68,13 @@ def inspect_database(template, name):
         password=db.password,
         running=db.running(),
         status=db.container['Status'],
-        created=db.container['Created'])
+        created=db.container['Created'],
+    )
+
+    if 'com.myaas.expiresAt' in db.container['Labels']:
+        result.update({'expires_at': db.container['Labels']['com.myaas.expiresAt']})
+
+    return jsonify(result)
 
 
 @app.route('/db/<template>/<name>', methods=['post'])
