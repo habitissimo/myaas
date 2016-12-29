@@ -63,6 +63,7 @@ def inspect_database(template, name):
     result = dict(
         database=db.database,
         host=HOSTNAME,
+        name=db.name,
         port=db.host_port,
         user=db.user,
         password=db.password,
