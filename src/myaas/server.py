@@ -81,7 +81,9 @@ def inspect_database(template, name):
 @app.route('/db/<template>/<name>', methods=['post'])
 def create_database(template, name):
     logger.debug(f'requested create DB from "{template}" as "{name}"')
-    ttl = request.form.get("ttl")
+    form_ttl = request.form.get("ttl")
+    json_ttl = request.get_json(silent=True)['ttl']
+    ttl = form_ttl or json_ttl
     if ttl:
         ttl = int(ttl)
     database_class = get_enabled_backend().Database
