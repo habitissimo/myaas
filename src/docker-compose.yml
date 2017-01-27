@@ -1,5 +1,13 @@
 version: "2"
 services:
+  nginx:
+    build: nginx
+    image: habitissimo/myaas-nginx
+    ports:
+      - 80:80
+    links:
+      - myaas
+      - gui
   myaas_base:
     build: .
     environment:
@@ -9,10 +17,12 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - .:/code/
+      - /opt/myaas:/myaas
   myaas:
     extends: myaas_base
-    ports:
-      - 5001:5001
+  gui:
+    build: gui
+    image: habitissimo/myaas-gui
   daemon:
     extends: myaas_base
     entrypoint: python -m myaas.daemon

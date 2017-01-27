@@ -21,4 +21,5 @@ RUN chmod +x /docker-entrypoint.sh
 ADD runserver.py /code/
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["gunicorn", "runserver:app", "-b", "0.0.0.0:5001", "--log-file=-", "--log-level=info", "-w=5", "--timeout=900"]
+
+CMD ["gunicorn", "runserver:app", "-b", "0.0.0.0:80", "--log-file=-", "--log-level=info", "-w=5", "--timeout=900"]
