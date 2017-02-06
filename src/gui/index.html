@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script type="application/javascript" src="bower_components/jquery/dist/jquery.js"></script>
+  <script type="application/javascript" src="bower_components/underscore/underscore.js"></script>
+  <script type="application/javascript" src="bower_components/backbone/backbone.js"></script>
+  <script type="application/javascript" src="bower_components/semantic/dist/semantic.js"></script>
+  <script type="application/javascript" src="bower_components/semantic-ui-calendar/dist/calendar.js"></script>
+  <script type="application/javascript" src="bower_components/clipboard/dist/clipboard.min.js"></script>
+  <script type="application/javascript" src="main.js"></script>
+  <link rel="stylesheet" href="bower_components/semantic/dist/semantic.min.css">
+  <link rel="stylesheet" href="bower_components/semantic-ui-calendar/dist/calendar.min.css">
+  <title>Myaas Databases</title>
+</head>
+  <body>
+    <div class="ui container" id="app">
+      <div class="ui container">
+        <div class="ui form attached fluid new-db-form" id="create_db_form">
+          <div class="three fields">
+            <div class="required field">
+              <label for="database_name">Database name</label>
+              <input name="database_name" type="text" placeholder="Give a name to the database..." id="database_name">
+            </div>
+            <div class="field">
+              <label for="template">Database template</label>
+              <select class="dropdown" name="template" id="databases-selector"></select>
+            </div>
+            <div class="field">
+              <label for="ttl">Expire on</label>
+              <div class="ui calendar" id="calendar">
+                <div class="ui input left icon">
+                  <i class="calendar icon"></i>
+                  <input name="ttl" type="text" placeholder="Expire on">
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- <div class="ui toggle checkbox">
+            <input type="checkbox" class='hidden'>
+            <label for="">Never expires</label>
+          </div> -->
+          <button class="ui animated fade right floated primary button" id="new_db">
+            <div class="hidden content"><i class="ui icon plus"></i></div>
+            <div class="visible content">Create</div>
+          </button>
+        </div>
+      </div>
+      <table class="ui celled table">
+        <thead>
+          <tr>
+            <th>Database Name</th>
+            <th>Template Name</th>
+            <th>Created on</th>
+            <th>Expires on</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="databases-container">
+        </tbody>
+        <div class="ui basic modal" id="entry_modal">
+          <i class="close icon"></i>
+          <div class="header">
+            Remove database
+          </div>
+          <div class="image content">
+            <div class="image">
+              <i class="archive icon"></i>
+            </div>
+            <div class="description">
+              <p>Are you sure you want to remove the database?</p>
+            </div>
+          </div>
+          <div class="actions">
+            <div class="two fluid ui inverted buttons">
+              <div class="ui cancel red inverted button">
+                <i class="remove icon"></i>
+                No
+              </div>
+              <div class="ui ok green inverted button">
+                <i class="checkmark icon"></i>
+                Yes
+              </div>
+            </div>
+          </div>
+        </div>
+      </table>
+    </div>
+
+    <div class="ui small basic modal transition" id="db_delete_modal">
+      <div class="ui icon header">
+        <i class="warning sign icon"></i>
+      </div>
+      <div class="content">
+        <div class="description center"><p>Are you sure you want to delete this database?</p></div>
+      </div>
+      <div class="actions">
+        <div class="ui basic cancel inverted button">
+          <i class="remove icon"></i>
+          NO
+        </div>
+        <div class="ui red ok inverted button">
+          <i class="trash icon"></i>
+          Remove
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script type="text/template" id="db_inspect_modal_template">
+    <div class="ui modal" id="db_inspect_modal">
+      <div class="header">Database info</div>
+      <div class="content">
+        <div class="description center">
+          <% _.each(data, function(val, key) { %> 
+          <p>
+            <div class="ui large label">
+              <%= key %>
+              <a class="detail"
+                 data-clipboard-text="<%= val %>"
+                 data-tooltip="Copy to clipboard">
+                 <%= val %>
+              </a>
+            </div>
+          </p>
+          <% }); %>
+        </div>
+      </div>
+      <div class="actions">
+        <div class="ui secondary deny button">Close</div>
+      </div>
+    </div>
+  </script>
+
+  <script type="text/template" id="option-db-template">
+    <option value="<%= name %>"><%= name %></option>
+  </script>
+
+  <script type="text/template" id="error-message-template">
+    <i class="close icon"></i>
+    <div class="header"><%= header %></div>
+    <p><%= message %></p>
+  </script>
+
+  <script type="text/template" id="db-row-template">
+    <td><%= model.get('name') %></td>
+    <td><%= model.get('template') %></td>
+    <td><%= model.formatedCreated() %></td>
+    <td><%= model.formatedExpiresOn() %></td>
+    <td>
+      <div class="tiny ui buttons">
+        <button class="ui negative button delete">
+          <i class="trash icon"></i>
+          Delete
+        </button>
+        <button class="ui button inspect">
+          <i class="info icon"></i>
+          Inspect
+        </button>
+      </div>
+    </td>
+  </script>
+
+</html>

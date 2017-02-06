@@ -1,0 +1,18 @@
+version: "2"
+services:
+
+  nodebase:
+    image: node
+    working_dir: "/opt"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ".:/opt"
+
+  npm:
+    extends: nodebase
+    entrypoint: npm
+
+  bower:
+    extends: nodebase
+    entrypoint: /opt/node_modules/bower/bin/bower --allow-root
