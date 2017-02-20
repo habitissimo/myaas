@@ -64,7 +64,10 @@ class Daemon():
             template= labels['com.myaas.template']
             name = labels['com.myaas.instance']
             if now >= expires_at:
-                self.remove_container(template, name)
+                try:
+                    self.remove_container(template, name)
+                except Exception as e:
+                    logger.exception(f"Failed to remove container {template} {name}")
 
     def start(self):
         logger.info("Starting myaas daemon...")
