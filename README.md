@@ -1,7 +1,5 @@
 [![Docker Build Statu](https://img.shields.io/docker/build/habitissimo/myaas.svg)]()
-
 [![Docker Pulls](https://img.shields.io/docker/pulls/habitissimo/myaas.svg)]()
-
 [![Docker Automated buil](https://img.shields.io/docker/automated/habitissimo/myaas.svg)]()
 
 # MyAAS (Mysql As A Service)
