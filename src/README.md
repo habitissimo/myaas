@@ -1,9 +1,3 @@
-[![Docker Build Statu](https://img.shields.io/docker/build/habitissimo/myaas.svg)]()
-
-[![Docker Pulls](https://img.shields.io/docker/pulls/habitissimo/myaas.svg)]()
-
-[![Docker Automated buil](https://img.shields.io/docker/automated/habitissimo/myaas.svg)]()
-
 # DB replicator
 
 This application uses docker to allow quick creation of databases for development and testing. The only database supported right now is Mysql/MariaDB but it's designed to make it really easy to adapt to any kind of database.

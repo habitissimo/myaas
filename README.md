@@ -1,3 +1,9 @@
+[![Docker Build Statu](https://img.shields.io/docker/build/habitissimo/myaas.svg)]()
+
+[![Docker Pulls](https://img.shields.io/docker/pulls/habitissimo/myaas.svg)]()
+
+[![Docker Automated buil](https://img.shields.io/docker/automated/habitissimo/myaas.svg)]()
+
 # MyAAS (Mysql As A Service)
 
 This product has been developed internally at habitissimo for allowing developers to get the database instances they need for development as fast as possible.
