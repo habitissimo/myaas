@@ -7,6 +7,7 @@ from docker.errors import NotFound as ImageNotFound
 from . import settings
 from .utils.container import client
 from .utils.database import get_enabled_backend
+from .utils.filesystem import is_empty
 from .backends.exceptions import NonExistentTemplate, ImportDataError
 
 
@@ -57,6 +58,10 @@ def main():
     for dump in dumps:
         db_name = dump[:-4]  # strip .sql from the name
         sql_file = os.path.join(settings.DUMP_DIR, dump)
+
+        if is_empty(sql_file):
+            print(f"- Skipping: {sql_file} is empty")
+            continue
 
         print("- Creating database {}".format(db_name))
         db = remove_recreate_database(db_name)

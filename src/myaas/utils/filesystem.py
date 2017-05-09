@@ -1,4 +1,5 @@
 from os import rename as _mv
+from os.path import getsize
 from shutil import rmtree as _rmtree
 from subprocess import call as _call
 
@@ -14,3 +15,6 @@ def rm_tree(path):
 
 def rename(origin, destination):
     _mv(origin, destination)
+
+def is_empty(path):
+    return not getsize(path) > 100

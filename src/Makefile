@@ -3,8 +3,8 @@ CWD:= $(shell pwd)
 HOSTNAME := $(shell hostname -i)
 IMAGE=habitissimo/myaas
 DOCKER_RUN_FLAGS = --rm -e "HOST_NAME=$(HOSTNAME)"
-run     : DOCKER_RUN_FLAGS += -p 5001:5001 --name=dbm-server
-dev     : DOCKER_RUN_FLAGS += -p 5001:5001 -v "$(PWD):/code" -e "DEBUG=True" --name=myaas-server-dev
+run     : DOCKER_RUN_FLAGS += -p 5001:80 --name=dbm-server
+dev     : DOCKER_RUN_FLAGS += -p 5001:80 -v "$(PWD):/code" -e "DEBUG=True" --name=myaas-server-dev
 daemon  : DOCKER_RUN_FLAGS += -it --name=myaas-daemon
 daemon-dev: DOCKER_RUN_FLAGS += -it --name=myaas-daemon -v "$(PWD):/code" -e "DEBUG=True"
 shell   : DOCKER_RUN_FLAGS += -it -v "$(PWD):/code" --entrypoint=ipython --name=myaas-ipython
