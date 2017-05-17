@@ -82,7 +82,8 @@ def inspect_database(template, name):
 def create_database(template, name):
     logger.debug(f'requested create DB from "{template}" as "{name}"')
     form_ttl = request.form.get("ttl")
-    json_ttl = request.get_json(silent=True).get("ttl")
+    json_ttl = request.get_json(silent=True)
+    json_ttl = json_ttl.get("ttl") if json_ttl else None
     ttl = form_ttl or json_ttl
     if ttl:
         ttl = int(ttl)
