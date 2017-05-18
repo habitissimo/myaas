@@ -21,7 +21,14 @@ find_or_create_database()
   debug_last_request $ret
   if [ $ret -ne 0 ]; then
     print_ts "  - No existing database found"
-    create_database
+    local n=0
+    until [ $n -ge 5 ]
+    do
+      create_database && break
+      print_ts "  - Failed database creation"
+      n=$[$n+1]
+      sleep 2
+    done
   else
     print_ts "  - Database found"
   fi
