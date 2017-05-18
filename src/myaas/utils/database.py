@@ -26,6 +26,9 @@ def list_database_templates():
 
 
 def _is_database_container(container):
+    if not container['Labels']:
+        return False
+
     if 'com.myaas.instance' not in container['Labels']:
         return False
 
@@ -33,6 +36,9 @@ def _is_database_container(container):
 
 
 def _is_template_container(container):
+    if not container['Labels']:
+        return False
+
     if 'com.myaas.is_template' not in container['Labels']:
         return False
 
