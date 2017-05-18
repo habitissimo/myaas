@@ -10,6 +10,7 @@ services:
       - gui
   myaas_base:
     build: .
+    image: habitissimo/myaas
     environment:
       - DEBUG=1
       - TZ=Europe/Madrid

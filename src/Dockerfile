@@ -19,7 +19,10 @@ ADD myaas /code/myaas/
 ADD docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 ADD runserver.py /code/
+ADD gunicorn.conf.py /code/
+
+
+ENV PYTHONUNBUFFERED=1
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-
-CMD ["gunicorn", "runserver:app", "-b", "0.0.0.0:80", "--log-file=-", "--log-level=info", "-w=5", "--timeout=900"]
+CMD ["gunicorn", "-c", "gunicorn.conf.py", "runserver:app"]
