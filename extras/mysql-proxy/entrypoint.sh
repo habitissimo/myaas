@@ -17,7 +17,7 @@ find_or_create_database()
 {
   local ret=0
   print_ts "* Looking for existing database ${MYAAS_TEMPLATE}/${MYAAS_NAME} ..."
-  JSON=`$CURL ${MYAAS_URL}/db/${MYAAS_TEMPLATE}/${MYAAS_NAME}` || ret=$?
+  JSON=`$CURL ${MYAAS_URL}/db/${MYAAS_TEMPLATE}/${MYAAS_NAME/\//-}` || ret=$?
   debug_last_request $ret
   if [ $ret -ne 0 ]; then
     print_ts "  - No existing database found"
@@ -36,7 +36,7 @@ create_database()
 {
   local ret=0
   print_ts "* Creating database"
-  JSON=`$CURL --form ttl=${MYAAS_TTL} ${MYAAS_URL}/db/${MYAAS_TEMPLATE}/${MYAAS_NAME}` || ret=$?
+  JSON=`$CURL --form ttl=${MYAAS_TTL} ${MYAAS_URL}/db/${MYAAS_TEMPLATE}/${MYAAS_NAME/\//-}` || ret=$?
   debug_last_request $ret
   if [ -z "$JSON" ]; then
     print_ts "  - [ERROR] Empty server response"
@@ -56,7 +56,7 @@ remove_database()
   fi
 
   print_ts "* Removing database..."
-  JSON=`$CURL -X DELETE ${MYAAS_URL}/db/${MYAAS_TEMPLATE}/${MYAAS_NAME}` || ret=$?
+  JSON=`$CURL -X DELETE ${MYAAS_URL}/db/${MYAAS_TEMPLATE}/${MYAAS_NAME/\//-}` || ret=$?
   debug_last_request $ret
   if [ $ret -eq 0 ]; then
       print_ts "  - Deleted ${MYAAS_TEMPLATE}-${MYAAS_NAME}"
