@@ -18,7 +18,7 @@ logging.basicConfig(
     level=logging.DEBUG if DEBUG else logging.INFO)
 logging.getLogger('requests').setLevel(logging.CRITICAL)
 logging.getLogger('docker').setLevel(logging.CRITICAL)
-logger = logging.getLogger("myaas-daemon")
+logger = logging.getLogger("myaas-reaper")
 
 
 class SignalHandler:
@@ -41,7 +41,7 @@ class SignalHandler:
         signal.signal(signal.SIGINT, self.stop)
 
 
-class Daemon():
+class TtlReaper():
 
     def __init__(self, sighandler):
         self.sighandler = sighandler
@@ -70,7 +70,7 @@ class Daemon():
                     logger.exception(f"Failed to remove container {template} {name}")
 
     def start(self):
-        logger.info("Starting myaas daemon...")
+        logger.info("Starting myaas ttl reaper...")
         while self.sighandler.should_run:
             self.remove_expired_containers()
             sleep(1)
@@ -81,5 +81,5 @@ class Daemon():
 
 if __name__ == '__main__':
     sighandler = SignalHandler()
-    daemon = Daemon(sighandler)
+    daemon = TtlReaper(sighandler)
     daemon.start()

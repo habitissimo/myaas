@@ -5,8 +5,8 @@ case $1 in
     python -m myaas.update
     exit 0
   ;;
-  "daemon")
-    python -m myaas.daemon
+  "reaper")
+    python -m myaas.reaper
     exit 0
   ;;
 esac
