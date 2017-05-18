@@ -63,20 +63,31 @@ def main():
             print(f"- Skipping: {sql_file} is empty")
             continue
 
-        print("- Creating database {}".format(db_name))
-        db = remove_recreate_database(db_name)
+        tried = 0
+        max_tries = 4
+        while tried < max_tries:
+            print("- Creating database {}".format(db_name))
+            db = remove_recreate_database(db_name)
 
-        print(indent("* Starting database..."))
-        db.start()
-        print(indent("* Started"))
+            print(indent("* Starting database..."))
+            db.start()
+            print(indent("* Started"))
 
-        try:
             print(indent("* Waiting for database to accept connections"))
-            db.wait_for_service_listening()
-        except:
-            db.stop()
-            db.restore_backup()
-            print_exception()
+            try:
+                db.wait_for_service_listening()
+                break
+            except:
+                print(indent(
+                    f"* Max time waiting for database exceeded"
+                    ", retrying {tried} of {max_tries}..."
+                ))
+                db.stop()
+                db.restore_backup()
+                print_exception()
+            tried += 1
+
+        if tried == max_tries:
             continue
 
         print(indent("* Importing data..."))
