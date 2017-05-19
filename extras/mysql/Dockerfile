@@ -12,4 +12,8 @@ ADD myaas.cnf /etc/mysql/conf.d/myaas.cnf
 RUN chown -R mysql:mysql /etc/mysql/conf.d
 ADD configure-memory.sh /docker-entrypoint-initdb.d/
 
+# customize entrypoint
+COPY custom-entrypoint.sh /usr/local/bin/
+ENTRYPOINT ["custom-entrypoint.sh"]
+
 CMD ["mysqld", "--innodb-doublewrite=0"]
