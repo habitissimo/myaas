@@ -34,12 +34,18 @@ DB_PASSWORD = config("MYAAS_DB_PASSWORD", default='myaas')
 
 # Required environment variables for running the mysql image
 # All of the listed images above need this environemnt variables
-MYSQL_ENVIRONMENT = {
-    "MYSQL_RANDOM_ROOT_PASSWORD": 'yes',
-    "MYSQL_DATABASE": DB_DATABASE,
-    "MYSQL_USERNAME": DB_USERNAME,
-    "MYSQL_PASSWORD": DB_PASSWORD,
-}
+if DB_USERNAME == "root":
+    MYSQL_ENVIRONMENT = {
+        "MYSQL_DATABASE": DB_DATABASE,
+        "MYSQL_ROOT_PASSWORD": DB_PASSWORD,
+    }
+else:
+    MYSQL_ENVIRONMENT = {
+        "MYSQL_RANDOM_ROOT_PASSWORD": "yes",
+        "MYSQL_DATABASE": DB_DATABASE,
+        "MYSQL_USERNAME": DB_USERNAME,
+        "MYSQL_PASSWORD": DB_PASSWORD,
+    }
 
 POSTGRES_ENVIRONMENT = {
     "POSTGRES_DB": DB_DATABASE,

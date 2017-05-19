@@ -29,15 +29,15 @@ class Database(AbstractDatabase):
 
     @property
     def user(self):
-        return "root"
+        return settings.DB_USERNAME
 
     @property
     def password(self):
-        return settings.MYSQL_ENVIRONMENT['MYSQL_ROOT_PASSWORD']
+        return settings.DB_PASSWORD
 
     @property
     def database(self):
-        return settings.MYSQL_ENVIRONMENT['MYSQL_DATABASE']
+        return settings.DB_DATABASE
 
     def test_connection(self):
         super().test_connection()

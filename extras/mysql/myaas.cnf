@@ -19,7 +19,7 @@ innodb_use_native_aio = 0
 ### InnoDB params
 innodb_file_per_table = 1
 innodb_buffer_pool_size = 2G
-innodb_buffer_pool_instances=2
+innodb_buffer_pool_instances = 2
 innodb_log_buffer_size  = 256M
 innodb_log_file_size = 512M
 innodb_open_files = 4000

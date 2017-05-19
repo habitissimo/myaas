@@ -190,6 +190,14 @@ class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
                 raise self.not_found_exception_class()
             self.container = self.create_container(self.image)
 
+    @property
+    def user(self):
+        return ''
+
+    @property
+    def password(self):
+        return ''
+
     @abstractproperty
     def datadir(self):
         pass
@@ -225,6 +233,8 @@ class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
             'com.myaas.is_template': 'False',
             'com.myaas.template': self.template,
             'com.myaas.instance': self.name,
+            'com.myaas.username': self.user,
+            'com.myaas.password': self.password,
         }
         if self.ttl:
             expire_at = datetime.now() + timedelta(seconds=self.ttl)
