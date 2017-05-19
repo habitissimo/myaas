@@ -5,7 +5,7 @@ from random import sample as random_sample
 
 from .. import settings
 
-client = docker.Client(base_url=settings.DOCKER_SOCKET)
+client = docker.Client(base_url=settings.DOCKER_HOST)
 
 
 def find_container(name):
@@ -39,8 +39,7 @@ def translate_host_basedir(path):
     return path.replace(mount['Destination'], mount['Source'], 1)
 
 
-def get_random_cpuset():
+def get_random_cpuset(cores_to_assign):
     available_cores = cpu_count()
-    cores_to_assign = settings.CPU_PINNING_INSTANCE_CORES
     random_cores = random_sample(range(available_cores), cores_to_assign)
     return ",".join(map(str, random_cores))

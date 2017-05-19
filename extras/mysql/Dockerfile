@@ -1,4 +1,4 @@
-FROM mariadb:10.1.14
+FROM mariadb:10.1.23
 MAINTAINER Hugo Chinchilla <hchinchilla@habitissimo.com>
 
 # customize base config

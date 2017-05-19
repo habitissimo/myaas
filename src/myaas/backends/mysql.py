@@ -39,10 +39,6 @@ class Database(AbstractDatabase):
     def database(self):
         return settings.MYSQL_ENVIRONMENT['MYSQL_DATABASE']
 
-    @property
-    def memory_limit(self):
-        return '3g'
-
     def test_connection(self):
         super().test_connection()
         try:

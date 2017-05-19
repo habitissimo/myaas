@@ -46,13 +46,13 @@ class ContainerService():
 
     @property
     def cpuset(self):
-        if not settings.CPU_PINNING:
-            return None
-        return get_random_cpuset()
+        if not settings.CPU_PINNING_INSTANCE_CORES == 0:
+            return get_random_cpuset(settings.CPU_PINNING_INSTANCE_CORES)
+        return None
 
     @property
     def memory_limit(self):
-        return None
+        return settings.MEMORY_LIMIT
 
     @property
     def restart_policy(self):

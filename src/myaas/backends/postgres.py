@@ -38,10 +38,6 @@ class Database(AbstractDatabase):
     def database(self):
         return settings.POSTGRES_ENVIRONMENT['POSTGRES_DB']
 
-    @property
-    def mem_limit(self):
-        return '3g'
-
 
 class Template(Database, AbstractDatabaseTemplate):
     @property

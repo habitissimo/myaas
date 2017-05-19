@@ -72,17 +72,55 @@ While the base databases are being updated you can't interact with the service, 
 
 You can provide some configuration parameters trough environemnt variables.
 
- * **HOST_NAME**: The hostname the service should show as a connection endpoint for itself.
- 
- * **MYSQL_DOCKER_IMAGE**: the mysql image used to spawn new databases.
-    * Default value: habitissimo/myaas-mysql:10.1
-    
- * **MYSQL_ROOT_PASSWORD**: the password to be set for root access in create databases.
-    * Default value: secret
-    
- * **MYSQL_DATABASE**: name of the database to create. (The name is the same always for all instances from all templates, yo will identify them by container name).
-    * Default value: default
-     
-**Warning:** You can replace the `MYSQL_DOCKER_IMAGE` by a custom one, but the code makes some asumptions on how to launch the database image, `habitissimo/myaas-mysql` image requires the following environment variables to be passed to work: `MYSQL_ROOT_PASSWORD`, `MYSQL_DATABASE`.
+## Required
+
+ * **MYAAS_HOST_NAME**: The hostname the service should show as a connection endpoint for itself (hostname or ip from the docker host).
+
+## Performance
+ * **MYAAS_MEMORY_LIMIT**: memory limit for each container created by myaas (using docker syntax).
+    * Default value: `2g`
+
+ * **MYAAS_CPU_PINNING_CORES**: Pin every container this number of CPUS. (InnoDB doesn't handle very well having more than 8 cores available, when used on a system with many cores this increases performance).
+   * Defautl value: `2` (0 to disable)
+
+## Optional
+
+ * **MYAAS_DEBUG**: print debug logs to stdout.
+    * Default value: `False`
+
+ * **MYAAS_PREFIX**: prefix added to every container created by myaas.
+   * Default value: `myaas`
+
+ * **MYAAS_DOCKER_HOST**: Docker host to use.
+   * Default value: `unix://var/run/docker.sock`
+
+ * **MYAAS_CONTAINER_TTL**: Default TTL (in seconds) given to a new instance, if `reaper` process is running instances will be deleted after this time, used for autocleaning.
+   * Default value: `0` (disabled)
+
+ * **MYAAS_MYSQL_IMAGE**: the mysql image used to spawn new databases.
+   * Default value: `habitissimo/myaas-mysql`
+
+ * **MYAAS_DB_USERNAME**: the password to be set for root access in create databases.
+   * Default value: `myaas`
+
+ * **MYAAS_DB_PASSWORD**: the password to be set for root access in create databases.
+   * Default value: `myaas`
+
+ * **MYAAS_DB_DATABASE**: name of the database to create. (The database name is the same for all instances).
+   * Default value: `myaas`
+
+## Experimental
+
+ * **MYAAS_BACKEND**: to switch between mysql and postgres.
+   * Default value: `myaas.backends.mysql`
+   * Available values: `myaas.backends.mysql` and `myaas.backends.postgres`
+
+ * **MYAAS_POSTGRES_IMAGE**: the postgres image used to spawn new databases when backend is set to `myaas.backends.postgres`.
+   * Default value: `postgres:9.4`
+
+
+**Warning:** You can replace the `MYAAS_MYSQL_IMAGE` by a custom one, but it must be derived from `mariadb:10` or be compatible with it. Look at `settings.py` to see the environments passed to every new mysql container in the setting `MYSQL_ENVIRONMENT`.
+
+The same goes for replacig `MYAAS_POSTGRES_IMAGE`, it must be derived from `postgres:9` or be compatible with it.
 
 Your image should be able to accept this environment variables (even if it will not use them) and should not require aditional ones. The easiest way to customize the database settings is to create a derivate from habitissimo/myaas-mysql:10.1.
