@@ -8,6 +8,7 @@ from . import settings
 from .utils.container import client
 from .utils.database import get_enabled_backend
 from .utils.filesystem import is_empty
+from .utils.retry import RetryPolicy
 from .backends.exceptions import NonExistentTemplate, ImportDataError
 
 
@@ -53,6 +54,28 @@ def remove_recreate_database(template):
     return database
 
 
+def start_template_database(db_name):
+    print("- Creating database {}".format(db_name))
+    db = remove_recreate_database(db_name)
+
+    print(indent("* Starting database..."))
+    db.start()
+    print(indent("* Started"))
+    print(indent("* Waiting for database to accept connections"))
+    try:
+        db.wait_for_service_listening()
+        return db
+    except:
+        print(indent(
+            f"* Max time waiting for database exceeded"
+            ", retrying {tried} of {max_tries}..."
+        ))
+        db.stop()
+        db.restore_backup()
+        print_exception()
+        return False
+
+
 def main():
     dumps = list_dump_files()
     for dump in dumps:
@@ -63,32 +86,10 @@ def main():
             print(f"- Skipping: {sql_file} is empty")
             continue
 
-        tried = 0
-        max_tries = 4
-        while tried < max_tries:
-            print("- Creating database {}".format(db_name))
-            db = remove_recreate_database(db_name)
-
-            print(indent("* Starting database..."))
-            db.start()
-            print(indent("* Started"))
-
-            print(indent("* Waiting for database to accept connections"))
-            try:
-                db.wait_for_service_listening()
-                break
-            except:
-                print(indent(
-                    f"* Max time waiting for database exceeded"
-                    ", retrying {tried} of {max_tries}..."
-                ))
-                db.stop()
-                db.restore_backup()
-                print_exception()
-            tried += 1
-
-        if tried == max_tries:
-            continue
+        start_db_func = partial(start_template_database, db_name)
+        db = RetryPolicy(5, delay=2)(start_db_func)
+        if not db:
+            continue # skip to next database to import
 
         print(indent("* Importing data..."))
         try:
