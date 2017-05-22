@@ -1,6 +1,7 @@
 import os
 import sys
 import traceback
+import functools
 
 from docker.errors import NotFound as ImageNotFound
 
@@ -86,7 +87,7 @@ def main():
             print(f"- Skipping: {sql_file} is empty")
             continue
 
-        start_db_func = partial(start_template_database, db_name)
+        start_db_func = functools.partial(start_template_database, db_name)
         db = RetryPolicy(5, delay=2)(start_db_func)
         if not db:
             continue # skip to next database to import
