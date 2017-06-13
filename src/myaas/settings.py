@@ -18,7 +18,7 @@ DOCKER_HOST = config('MYAAS_DOCKER_HOST',
 # All containers created by this service will have this prefix in their name
 CONTAINER_PREFIX = config('MYAAS_PREFIX', default='myaas-')
 # Default time that a container stays up, in seconds.
-CONTAINER_TTL = config('MYAAS_CONTAINER_TTL', cast=int, default=0)
+CONTAINER_TTL = config('MYAAS_CONTAINER_TTL', cast=int, default=60*60*24)
 
 # Default docker imgage for the mysql backend
 # Currently tested with:
@@ -28,24 +28,20 @@ CONTAINER_TTL = config('MYAAS_CONTAINER_TTL', cast=int, default=0)
 MYSQL_IMAGE = config("MYAAS_MYSQL_IMAGE", default="habitissimo/myaas-mysql")
 POSTGRES_IMAGE = config("MYAAS_POSTGRES_IMAGE", default="postgres:9.4")
 
-DB_DATABASE = config("MYAAS_DB_DATABASE", default='myaas')
+DB_DATABASE = config("MYAAS_DB_DATABASE", default='default')
 DB_USERNAME = config("MYAAS_DB_USERNAME", default='myaas')
 DB_PASSWORD = config("MYAAS_DB_PASSWORD", default='myaas')
 
 # Required environment variables for running the mysql image
-# All of the listed images above need this environemnt variables
-if DB_USERNAME == "root":
-    MYSQL_ENVIRONMENT = {
-        "MYSQL_DATABASE": DB_DATABASE,
-        "MYSQL_ROOT_PASSWORD": DB_PASSWORD,
-    }
-else:
-    MYSQL_ENVIRONMENT = {
-        "MYSQL_RANDOM_ROOT_PASSWORD": "yes",
-        "MYSQL_DATABASE": DB_DATABASE,
-        "MYSQL_USERNAME": DB_USERNAME,
-        "MYSQL_PASSWORD": DB_PASSWORD,
-    }
+# All of the listed images above need this environment variables
+
+MYSQL_ENVIRONMENT = {
+    #"MYSQL_RANDOM_ROOT_PASSWORD": "no",
+    "MYSQL_ROOT_PASSWORD": DB_PASSWORD,
+    "MYSQL_DATABASE": DB_DATABASE,
+    "MYSQL_USER": DB_USERNAME,
+    "MYSQL_PASSWORD": DB_PASSWORD,
+}
 
 POSTGRES_ENVIRONMENT = {
     "POSTGRES_DB": DB_DATABASE,

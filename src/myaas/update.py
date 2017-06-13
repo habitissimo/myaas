@@ -66,7 +66,7 @@ def start_template_database(db_name):
     try:
         db.wait_for_service_listening()
         return db
-    except:
+    except Exception as e:
         print(indent(
             f"* Max time waiting for database exceeded"
             ", retrying {tried} of {max_tries}..."
@@ -74,7 +74,7 @@ def start_template_database(db_name):
         db.stop()
         db.restore_backup()
         print_exception()
-        return False
+        raise e
 
 
 def main():
