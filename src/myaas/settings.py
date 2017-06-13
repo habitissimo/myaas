@@ -25,7 +25,7 @@ CONTAINER_TTL = config('MYAAS_CONTAINER_TTL', cast=int, default=60*60*24)
 #  - mariadb:10
 #  - mysql:5
 #  - habitissimo/myaas-mysql:10.1 (based on mariadb:10)
-MYSQL_IMAGE = config("MYAAS_MYSQL_IMAGE", default="habitissimo/myaas-mysql")
+MYSQL_IMAGE = config("MYAAS_MYSQL_IMAGE", default="habitissimo/myaas-mysql:10.1.23")
 POSTGRES_IMAGE = config("MYAAS_POSTGRES_IMAGE", default="postgres:9.4")
 
 DB_DATABASE = config("MYAAS_DB_DATABASE", default='default')
