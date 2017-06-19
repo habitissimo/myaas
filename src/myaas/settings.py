@@ -9,6 +9,9 @@ BACKEND = config("MYAAS_BACKEND", default="myaas.backends.mysql")
 # Controls the debug mode of the application
 DEBUG = config('MYAAS_DEBUG', default=False, cast=bool)
 
+# Do copy via reflink=always
+FORCE_COW = config("MYAAS_FORCE_COW", default=False, cast=bool)
+
 # Docker socket address, can be replaced with a TCP address iy you prefer not
 # to bind mount the docker socket
 DOCKER_HOST = config('MYAAS_DOCKER_HOST',
