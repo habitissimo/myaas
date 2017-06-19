@@ -1,7 +1,7 @@
 FROM python:3.6
 
 RUN apt-get update -y && \
-    apt-get install -y mysql-client postgresql-client && \
+    apt-get install -y mysql-client postgresql-client btrfs-tools && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

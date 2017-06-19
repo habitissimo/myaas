@@ -38,7 +38,7 @@ def remove_recreate_database(template):
         db = backend(client, template, False)
         if db.running():
             db.stop()
-        db.do_backup(use_rename=True)
+        db.do_backup()
         db.remove()
     except NonExistentTemplate:
         pass  # this means this database is being imported for the first time

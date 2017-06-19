@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from .. import settings
 from ..utils.container import find_container, translate_host_basedir, get_random_cpuset
 from ..utils.socket import reserve_port, test_tcp_connection
-from ..utils.filesystem import copy_tree, rm_tree, rename
+from ..utils.btrfs import FileSystem
 
 from .exceptions import (NonExistentDatabase, NonExistentTemplate,
                          NotReachableException, DBTimeoutException,
@@ -59,6 +59,11 @@ class ContainerService():
         return None
 
     def start(self):
+        fs = FileSystem(settings.DATA_DIR)
+        subvolume = fs.find_subvolume_by_name(self.container_name)
+        if not subvolume:
+            fs.make_subvolume(self.container_name)
+
         self.client.start(self.container)
 
     def stop(self):
@@ -123,7 +128,8 @@ class PersistentContainerService(ContainerService):
     def remove(self):
         super().remove()
         if isdir(self.host_datadir):
-            rm_tree(self.host_datadir)
+            fs = FileSystem(settings.DATA_DIR)
+            fs.delete_subvolume(self.container_name)
 
     def make_bindings_config(self):
         # host_datadir needs to be translated as the docker daemon runs on the
@@ -136,7 +142,7 @@ class PersistentContainerService(ContainerService):
         config['binds'] = self.make_bindings_config()
         return config
 
-    def do_backup(self, use_rename=False):
+    def do_backup(self):
         if self.running():
             raise ContainerRunning()
 
@@ -146,14 +152,13 @@ class PersistentContainerService(ContainerService):
         if not isdir(self.host_datadir):
             return  # nothing to backup
 
-        if use_rename:
-            rename(self.host_datadir, self.backupdir)
-        else:
-            copy_tree(self.host_datadir, self.backupdir)
+        fs = FileSystem(settings.DATA_DIR)
+        subvolume = fs.find_subvolume_by_name(self.container_name)
+        subvolume.take_snapshot('backup-' + self.container_name)
 
     def remove_backup(self):
-        if isdir(self.backupdir):
-            rm_tree(self.backupdir)
+        fs = FileSystem(settings.DATA_DIR)
+        subvolume = fs.delete_subvolume('backup-' + self.container_name)
 
     def restore_backup(self):
         if self.running():
@@ -162,8 +167,11 @@ class PersistentContainerService(ContainerService):
         if not isdir(self.backupdir):
             return False
 
-        rm_tree(self.host_datadir)
-        rename(self.backupdir, self.host_datadir)
+        fs = FileSystem(settings.DATA_DIR)
+        fs.delete_subvolume(self.container_name)
+        subvolume = fs.find_subvolume_by_name('backup-' + self.container_name)
+        subvolume.take_snapshot(self.container_name)
+        fs.delete_subvolume('backup-' + self.container_name)
 
         return True
 
@@ -297,9 +305,9 @@ class AbstractDatabaseTemplate(AbstractDatabase):
             self.client, self.template,
             name, create=True, ttl=ttl)
 
-        template_data_path = join_path(self.host_datadir, '.')
-
-        copy_tree(template_data_path, database.host_datadir)
+        fs = FileSystem(settings.DATA_DIR)
+        subvolume = fs.find_subvolume_by_name(self.container_name)
+        subvolume.take_snapshot(database.host_datadir)
 
         return database
 
