@@ -35,7 +35,7 @@ docker run -d --name=myaas \
  -p 5001:5001 \
  -v "/var/run/docker.sock:/var/run/docker.sock" \
  -v "/opt/myaas:/myaas" \
- -e "HOST_NAME=`hostname`" \
+ -e "MYAAS_HOSTNAME=`hostname`" \
  -e "MYSQL_DOCKER_IMAGE=habitissimo/myaas-mysql:10.1" \
  --restart=always \
   habitissimo/myaas
@@ -74,7 +74,7 @@ You can provide some configuration parameters trough environemnt variables.
 
 ## Required
 
- * **MYAAS_HOST_NAME**: The hostname the service should show as a connection endpoint for itself (hostname or ip from the docker host).
+ * **MYAAS_HOSTNAME**: The hostname the service should show as a connection endpoint for itself (hostname or ip from the docker host).
 
 ## Performance
  * **MYAAS_MEMORY_LIMIT**: memory limit for each container created by myaas (using docker syntax).

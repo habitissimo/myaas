@@ -56,7 +56,7 @@ MEMORY_LIMIT = config('MYAAS_MEMORY_LIMIT', default='2g')
 CPU_PINNING_INSTANCE_CORES = config("MYAAS_CPU_PINNING_CORES", cast=int, default=2)
 
 # Internal settings
-HOSTNAME = config('MYAAS_HOST_NAME', default='localhost')
+HOSTNAME = config('MYAAS_HOSTNAME', default='localhost')
 BASE_DIR = config('MYAAS_BASE_DIR', default='/myaas')
 
 DATA_DIR = BASE_DIR + "/data"

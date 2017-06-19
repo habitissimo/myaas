@@ -11,9 +11,9 @@ case $1 in
   ;;
 esac
 
-if [ -z $HOST_NAME ]; then
+if [ -z $MYAAS_HOSTNAME ]; then
   >&2 echo ""
-  >&2 echo "HOST_NAME environment variable is not set"
+  >&2 echo "MYAAS_HOSTNAME environment variable is not set"
   exit 1
 fi
 
