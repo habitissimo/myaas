@@ -114,8 +114,12 @@ class PersistentContainerService(ContainerService):
         return "/tmp"
 
     @property
-    def backupdir(self):
-        return join_path(settings.DATA_DIR, 'backup-' + self.container_name)
+    def backup_name(self):
+        return 'backup-' + self.container_name
+
+    @property
+    def backup_path(self):
+        return join_path(settings.DATA_DIR, self.backup_name)
 
     @property
     def host_datadir(self):
@@ -154,24 +158,25 @@ class PersistentContainerService(ContainerService):
 
         fs = FileSystem(settings.DATA_DIR)
         subvolume = fs.find_subvolume_by_name(self.container_name)
-        subvolume.take_snapshot('backup-' + self.container_name)
+        subvolume.take_snapshot(self.backup_name)
 
     def remove_backup(self):
-        fs = FileSystem(settings.DATA_DIR)
-        subvolume = fs.delete_subvolume('backup-' + self.container_name)
+        if isdir(self.backup_path):
+            fs = FileSystem(settings.DATA_DIR)
+            subvolume = fs.delete_subvolume(self.backup_name)
 
     def restore_backup(self):
         if self.running():
             raise ContainerRunning()
 
-        if not isdir(self.backupdir):
+        if not isdir(self.backup_path):
             return False
 
         fs = FileSystem(settings.DATA_DIR)
         fs.delete_subvolume(self.container_name)
-        subvolume = fs.find_subvolume_by_name('backup-' + self.container_name)
+        subvolume = fs.find_subvolume_by_name(self.backup_name)
         subvolume.take_snapshot(self.container_name)
-        fs.delete_subvolume('backup-' + self.container_name)
+        fs.delete_subvolume(self.backup_name)
 
         return True
 
