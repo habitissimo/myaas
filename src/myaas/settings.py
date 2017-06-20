@@ -36,11 +36,8 @@ DB_PASSWORD = config("MYAAS_DB_PASSWORD", default='myaas')
 # All of the listed images above need this environment variables
 
 MYSQL_ENVIRONMENT = {
-    #"MYSQL_RANDOM_ROOT_PASSWORD": "no",
     "MYSQL_ROOT_PASSWORD": DB_PASSWORD,
     "MYSQL_DATABASE": DB_DATABASE,
-    "MYSQL_USER": DB_USERNAME,
-    "MYSQL_PASSWORD": DB_PASSWORD,
 }
 
 POSTGRES_ENVIRONMENT = {

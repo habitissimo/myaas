@@ -16,7 +16,6 @@ POOL_INSTANCES=$(echo "$POOL_SIZE/1024" | bc)
 
 
 echo ""
-whoami
 echo "Configuring InnoDB instance pool"
 echo "POOL_SIZE: ${POOL_SIZE}M"
 echo "POOL_INSTANCES: ${POOL_INSTANCES}"

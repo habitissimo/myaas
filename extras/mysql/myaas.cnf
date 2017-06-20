@@ -13,8 +13,10 @@ thread_cache_size = 8
 query_cache_size = 256M
 query_cache_limit = 2M
 
-# InnoDB fails to start if datadir located on btrfs partition
-innodb_use_native_aio = 0
+### BTRFS ###
+innodb_doublewrite = false
+innodb_use_native_aio = false
+innodb_flush_method = fsync
 
 ### InnoDB params
 innodb_file_per_table = 1
@@ -23,7 +25,6 @@ innodb_buffer_pool_instances = 2
 innodb_log_buffer_size = 256M
 innodb_log_file_size = 512M
 innodb_open_files = 4000
-innodb_flush_method = O_DIRECT
 innodb_data_file_path = ibdata1:10M:autoextend
 innodb_flush_log_at_trx_commit = 0
 innodb_write_io_threads = 16
@@ -35,4 +36,9 @@ innodb_fast_shutdown=0
 innodb_flush_neighbors = 0
 innodb_io_capacity = 4000
 
+### General tunning ###
 performance_schema = off
+
+### Prevent connection reset while importing big SQL files ###
+net_read_timeout = 900
+wait_timeout = 28800

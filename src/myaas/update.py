@@ -69,7 +69,7 @@ def start_template_database(db_name):
     except Exception as e:
         print(indent(
             f"* Max time waiting for database exceeded"
-            ", retrying {tried} of {max_tries}..."
+            ", retrying..."
         ))
         db.stop()
         db.restore_backup()
