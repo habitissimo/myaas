@@ -26,3 +26,5 @@ ENV PYTHONUNBUFFERED=1
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["gunicorn", "-c", "gunicorn.conf.py", "runserver:app"]
+
+HEALTHCHECK --interval=5s --timeout=2s --retries=3 CMD curl --fail http://127.0.0.1/ || exit 1
