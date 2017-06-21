@@ -1,7 +1,7 @@
 test=''
 CWD:= $(shell pwd)
 HOSTNAME := $(shell hostname -i)
-IMAGE=habitissimo/myaas
+IMAGE=habitissimo/myaas:devel
 DOCKER_RUN_FLAGS = --rm -e "MYAAS_HOSTNAME=$(HOSTNAME)"
 run     : DOCKER_RUN_FLAGS += -p 5001:80 --name=dbm-server
 dev     : DOCKER_RUN_FLAGS += -p 5001:80 -v "$(PWD):/code" -e "DEBUG=True" --name=myaas-server-dev
@@ -22,7 +22,7 @@ build:
 	docker build -t $(IMAGE) .
 
 # push the image to the docker registry
-push:
+push: build
 	docker push $(IMAGE)
 
 # run the ttl reaper
