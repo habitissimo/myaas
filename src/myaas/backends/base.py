@@ -91,7 +91,7 @@ class ContainerService():
             "port_bindings": {port: reserve_port() for port in self.ports},
             "mem_limit": self.memory_limit,
             "restart_policy": self.restart_policy,
-            "oom_kill_disable": true,
+            "oom_kill_disable": True,
         }
 
     def create_container(self, image):
