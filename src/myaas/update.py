@@ -15,7 +15,7 @@ from .backends.exceptions import NonExistentTemplate, ImportDataError
 
 def list_dump_files():
     files_in_dir = os.listdir(settings.DUMP_DIR)
-    return set(filter(lambda x: x.endswith('.sql'), files_in_dir))
+    return filter(lambda x: x.endswith('.sql'), files_in_dir)
 
 
 def indent(string, level=1):
