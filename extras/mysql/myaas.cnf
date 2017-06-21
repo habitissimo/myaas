@@ -36,11 +36,11 @@ innodb_fast_shutdown = 0
 innodb_flush_neighbors = 0
 innodb_io_capacity = 4000
 
-### General tunning ###
-performance_schema = off
+### Enable performance logging ###
+performance_schema = on
 
 ### Prevent connection reset while importing big SQL files ###
-max_allowed_packet = 64M
+max_allowed_packet = 16M
 net_read_timeout = 900
 net_write_timeout = 900
 wait_timeout = 28800
