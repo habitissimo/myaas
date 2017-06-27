@@ -89,7 +89,6 @@ class ContainerService():
     def make_host_config(self):
         return {
             "port_bindings": {port: reserve_port() for port in self.ports},
-            "mem_reservation": self.memory_limit,
             "mem_limit": '11G',
             "restart_policy": self.restart_policy,
             "oom_kill_disable": True,
@@ -99,7 +98,7 @@ class ContainerService():
         host_config = self.make_host_config()
         # remove empty properties from config dict
         host_config = {k: v for k, v in host_config.items() if v}
-        return self.client.create_container(
+        container = self.client.create_container(
             image=image,
             name=self.container_name,
             ports=self.ports,
@@ -108,6 +107,10 @@ class ContainerService():
             labels=self.labels,
             cpuset=self.cpuset,
             host_config=self.client.create_host_config(**host_config))
+
+        self.client.update_container(container, mem_reservation=self.memory_limit)
+
+        return container
 
 
 class PersistentContainerService(ContainerService):
