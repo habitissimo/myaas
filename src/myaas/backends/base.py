@@ -235,7 +235,7 @@ class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
 
     @property
     def restart_policy(self):
-        return {"MaximumRetryCount": 0, "Name": "always"}
+        return {"MaximumRetryCount": 5, "Name": "on-failure"}
 
     @property
     def ports(self):
