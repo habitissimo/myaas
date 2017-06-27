@@ -89,7 +89,8 @@ class ContainerService():
     def make_host_config(self):
         return {
             "port_bindings": {port: reserve_port() for port in self.ports},
-            "mem_limit": self.memory_limit,
+            "mem_reservation": self.memory_limit,
+            "mem_limit": '11G',
             "restart_policy": self.restart_policy,
             "oom_kill_disable": True,
         }
