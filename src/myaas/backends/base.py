@@ -67,7 +67,7 @@ class ContainerService():
         self.client.start(self.container)
 
     def stop(self):
-        self.client.stop(self.container)
+        self.client.stop(self.container, timeout=5)
         self.client.wait(self.container)
 
     def kill(self):
@@ -78,9 +78,9 @@ class ContainerService():
 
     def remove(self):
         if self.running():
-            self.kill()
+            self.stop()
 
-        self.client.remove_container(self.container)
+        self.client.remove_container(self.container, v=True, force=True)
         self.container = None
 
     def inspect(self):
