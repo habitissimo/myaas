@@ -73,7 +73,7 @@ class TtlReaper():
         logger.info("Starting myaas ttl reaper...")
         while self.sighandler.should_run:
             self.remove_expired_containers()
-            sleep(1)
+            sleep(10)
 
     def __call__(self):
         self.start()
