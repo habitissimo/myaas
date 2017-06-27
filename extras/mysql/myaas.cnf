@@ -9,7 +9,7 @@ default-storage-engine = INNODB
 long_query_time = 10
 
 ### MyISAM ###
-key_buffer_size = 10M
+key_buffer_size = 64M
 
 ### Query cache
 thread_cache_size = 8
