@@ -185,6 +185,7 @@ class PersistentContainerService(ContainerService):
 class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
     """Abstract implementation for a database backend"""
 
+    WAIT_MAX_TRIES = 30
     not_found_exception_class = NonExistentDatabase
 
     def __init__(self, client, template, name, create=False, ttl=None):
@@ -278,7 +279,7 @@ class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
 
     def wait_for_service_listening(self):
         tries = 0
-        while tries < 30:
+        while tries < self.WAIT_MAX_TRIES:
             if self.test_connection():
                 return
             sleep(5)
@@ -297,6 +298,7 @@ class AbstractDatabaseTemplate(AbstractDatabase):
     """
     Abstract implementation of a template database
     """
+    WAIT_MAX_TRIES = 60
 
     not_found_exception_class = NonExistentTemplate
 
