@@ -8,6 +8,9 @@ table_open_cache = 2048
 default-storage-engine = INNODB
 long_query_time = 10
 
+### MyISAM ###
+key_buffer_size = 10M
+
 ### Query cache
 thread_cache_size = 8
 query_cache_size = 256M
@@ -32,12 +35,28 @@ innodb_read_io_threads = 8
 innodb_thread_concurrency = 16
 innodb_fast_shutdown = 0
 
+### Emulate 10.1 defaults ###
+#innodb_strict_mode = off
+#sql_mode = NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+#innodb_buffer_pool_dump_at_shutdown = OFF
+#innodb_buffer_pool_load_at_startup = OFF
+#innodb_autoinc_lock_mode = 1
+#innodb_buffer_pool_dump_pct = 100
+#innodb_max_dirty_pages_pct_lwm = 0.001000
+#innodb_max_undo_log_size = 1073741824
+#innodb_purge_threads = 1
+#innodb_use_atomic_writes = OFF
+#innodb_use_trim = OFF
+#thread_cache_size = 0
+#thread_pool_max_threads = 1000
+#thread_stack = 295936
+
 ### SSD tunning
 innodb_flush_neighbors = 0
 innodb_io_capacity = 4000
 
-### Enable performance logging ###
-performance_schema = on
+### Disable' performance logging ###
+performance_schema = off
 
 ### Prevent connection reset while importing big SQL files ###
 max_allowed_packet = 16M

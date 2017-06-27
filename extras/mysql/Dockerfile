@@ -1,4 +1,4 @@
-FROM mariadb:10.2.6
+FROM mariadb:10.1.23
 MAINTAINER Hugo Chinchilla <hchinchilla@habitissimo.com>
 
 # Install cgget command
@@ -18,4 +18,4 @@ ENTRYPOINT ["custom-entrypoint.sh"]
 
 CMD ["mysqld", "--innodb-doublewrite=0"]
 
-HEALTHCHECK --interval=5s --timeout=10s --retries=3 CMD mysql --user=root --password=$MYSQL_ROOT_PASSWORD -e "show databases;"
+HEALTHCHECK --interval=5s --timeout=10s --retries=3 CMD mysql --user=root --password=$MYSQL_ROOT_PASSWORD -h 127.0.0.1 -e "show databases;"
