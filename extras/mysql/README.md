@@ -2,7 +2,7 @@
 
 Available on docker hub as `habitissimo/habitissimo/myaas-mysql`.
 
- * UTF-8 (general ci) by default
+ * UTF-8 (unicode ci) by default
  * Small query cache
  * Small InnoDB pool (but bigger than default)
  * InnoDB optimized for SSD
