@@ -1,57 +1,64 @@
-from time import sleep
-from datetime import datetime
 import signal
 import logging
-import os
+from time import sleep
+from datetime import datetime
 
-from .utils.database import (
-    get_myaas_containers,
-    get_enabled_backend,
-)
-from .utils.container import client
+import click
+
 from .settings import DEBUG
+from .utils.database import get_myaas_containers, get_enabled_backend
+from .utils.container import client
 
 
 logging.basicConfig(
-    format='%(asctime)s %(name)s %(levelname)s: %(message)s'.format(os.getpid()),
+    format='%(asctime)s %(name)s %(levelname)s: %(message)s',
     level=logging.DEBUG if DEBUG else logging.INFO)
-logging.getLogger('requests').setLevel(logging.CRITICAL)
-logging.getLogger('docker').setLevel(logging.CRITICAL)
+
 logger = logging.getLogger("myaas-reaper")
 
 
 class SignalHandler:
-    __should_run = True
-    __registered = False
-
-    @property
-    def should_run(self):
-        return self.__should_run
-
     def __init__(self):
-        if not self.__registered:
-            self.register_signals()
-
-    def stop(self, signum, frame):
-        self.__should_run = False
-
-    def register_signals(self):
+        self.__killed = False
         signal.signal(signal.SIGTERM, self.stop)
         signal.signal(signal.SIGINT, self.stop)
 
+    @property
+    def exit(self):
+        return self.__killed
 
-class TtlReaper():
+    def stop(self, signum, frame):
+        self.__killed = True
 
-    def __init__(self, sighandler):
-        self.sighandler = sighandler
 
-    def remove_container(self, template, name):
-        logger.info(f'removing {name}')
-        database_class = get_enabled_backend().Database
-        db = database_class(client, template, name)
-        db.remove()
+class ContainerFilter(object):
+    def __init__(self, expired=False, dead=False, unhealthy=False):
+        self._expired = expired
+        self._dead = dead
+        self._unhealthy = unhealthy
 
-    def _expired(self, container):
+    def filter(self, containers):
+        if self._expired:
+            logger.info('* Filtering expired')
+        if self._dead:
+            logger.info('* Filtering exited')
+        if self._unhealthy:
+            logger.info('* Filtering unhealthy')
+        return filter(self._is_removable, containers)
+
+    def _is_removable(self, container):
+        if self._expired and self._is_expired(container):
+            return True
+
+        if self._dead and self._is_dead(container):
+            return True
+
+        if self._unhealthy and self._is_unhealthy(container):
+            return True
+
+        return False
+
+    def _is_expired(self, container):
         if 'com.myaas.expiresAt' in container['Labels']:
             expiry_ts = round(float(container['Labels']['com.myaas.expiresAt']))  # noqa
         else:
@@ -60,35 +67,52 @@ class TtlReaper():
 
         return datetime.utcnow() >= datetime.utcfromtimestamp(expiry_ts)
 
-    def _exited(self, container):
+    def _is_dead(self, container):
         return container['State'] == 'exited'
 
-    def _unhealthy(self, container):
+    def _is_unhealthy(self, container):
         return 'unhealthy' in container['Status']
 
-    def cleanup_containers(self):
-        for c in get_myaas_containers():
-            template = c['Labels']['com.myaas.template']
-            name = c['Labels']['com.myaas.instance']
 
-            if self._exited(c) or self._expired(c) or self._unhealthy(c):
-                try:
-                    self.remove_container(template, name)
-                except Exception as e:
-                    logger.exception(
-                        f"Failed to remove container {template} {name}")
+def remove_database(container):
+    template = container['Labels']['com.myaas.template']
+    name = container['Labels']['com.myaas.instance']
+    try:
+        logger.info(f'removing {name}')
+        backend = get_enabled_backend().Database
+        backend(client, template, name).remove()
+    except Exception as e:
+        logger.exception(
+            f"Failed to remove database {template} {name}")
 
-    def start(self):
-        logger.info("Starting myaas ttl reaper...")
-        while self.sighandler.should_run:
-            self.cleanup_containers()
-            sleep(10)
 
-    def __call__(self):
-        self.start()
+@click.command()
+@click.option('-e', '--expired', is_flag=True, default=False, help='Remove expired containers.')
+@click.option('-d', '--dead', is_flag=True, default=False, help='Remove exited containers.')
+@click.option('-u', '--unhealthy', is_flag=True, default=False, help='Remove unhealthy containers.')
+@click.option('--dry-run', is_flag=True, default=False, help='Only print name of containers that would be removed and exit.')
+def cleanup(expired, dead, unhealthy, dry_run):
+    if not (expired or dead or unhealthy):
+        raise click.UsageError("at least one filter must be enabled, use --help for more information")
 
+    cf = ContainerFilter(expired, dead, unhealthy)
+    databases = cf.filter(get_myaas_containers())
+
+    if dry_run:
+        logger.info("Started in dry mode")
+        for d in databases:
+            name = d['Names'][0].lstrip('/')
+            logger.info("would remove {0}".format(name))
+        return
+
+    logger.info("Starting myaas ttl reaper...")
+    sighandler = SignalHandler()
+    while not sighandler.exit:
+        for d in databases:
+            remove_database(d)
+        sleep(1)
+
+    logger.info("Stopped")
 
 if __name__ == '__main__':
-    sighandler = SignalHandler()
-    daemon = TtlReaper(sighandler)
-    daemon.start()
+    cleanup()
