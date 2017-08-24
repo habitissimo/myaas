@@ -63,12 +63,15 @@ class TtlReaper():
     def _exited(self, container):
         return container['State'] == 'exited'
 
+    def _unhealthy(self, container):
+        return 'unhealthy' in container['Status']
+
     def cleanup_containers(self):
         for c in get_myaas_containers():
             template = c['Labels']['com.myaas.template']
             name = c['Labels']['com.myaas.instance']
 
-            if self._exited(c) or self._expired(c):
+            if self._exited(c) or self._expired(c) or self._unhealthy(c):
                 try:
                     self.remove_container(template, name)
                 except Exception as e:
