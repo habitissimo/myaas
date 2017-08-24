@@ -17,6 +17,10 @@ logging.basicConfig(
 logger = logging.getLogger("myaas-reaper")
 
 
+def get_container_name(container):
+    return container['Names'][0].lstrip('/')
+
+
 class SignalHandler:
     def __init__(self):
         self.__killed = False
@@ -47,13 +51,17 @@ class ContainerFilter(object):
         return filter(self._is_removable, containers)
 
     def _is_removable(self, container):
+        name = get_container_name(container)
         if self._expired and self._is_expired(container):
+            logger.info("{0} is expired, queued for deletion".format(name))
             return True
 
         if self._dead and self._is_dead(container):
+            logger.info("{0} is dead, queued for deletion".format(name))
             return True
 
         if self._unhealthy and self._is_unhealthy(container):
+            logger.info("{0} is unhealthy, queued for deletion".format(name))
             return True
 
         return False
@@ -101,7 +109,7 @@ def cleanup(expired, dead, unhealthy, dry_run):
     if dry_run:
         logger.info("Started in dry mode")
         for d in databases:
-            name = d['Names'][0].lstrip('/')
+            name = get_container_name(d)
             logger.info("would remove {0}".format(name))
         return
 
@@ -113,6 +121,7 @@ def cleanup(expired, dead, unhealthy, dry_run):
         sleep(1)
 
     logger.info("Stopped")
+
 
 if __name__ == '__main__':
     cleanup()
