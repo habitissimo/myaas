@@ -90,7 +90,7 @@ def main():
         start_db_func = functools.partial(start_template_database, db_name)
         db = RetryPolicy(5, delay=2)(start_db_func)
         if not db:
-            continue # skip to next database to import
+            continue  # skip to next database to import
 
         print(indent("* Importing data..."))
         try:

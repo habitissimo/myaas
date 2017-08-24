@@ -1,4 +1,3 @@
-import threading
 from time import sleep
 from datetime import datetime
 import signal

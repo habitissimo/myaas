@@ -17,6 +17,7 @@ logger.basicConfig(
     format='%(asctime)s {:4} %(levelname)s: %(message)s'.format(os.getpid()),
     level=logging.DEBUG if DEBUG else logging.WARNING)
 
+
 @app.route('/', methods=['get'])
 def hello_world():
     return jsonify(

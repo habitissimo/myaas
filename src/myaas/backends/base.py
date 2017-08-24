@@ -247,7 +247,7 @@ class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
 
     @property
     def labels(self):
-        labels =  {
+        labels = {
             'com.myaas.provider': self.provider_name,
             'com.myaas.is_template': 'False',
             'com.myaas.template': self.template,

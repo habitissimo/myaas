@@ -44,7 +44,7 @@ worker_class = 'sync'
 #
 #       A positive integer generally set to around 1000.
 #
-#worker_connections = 1000
+# worker_connections = 1000
 #
 #   timeout - If a worker does not notify the master process in this
 #       number of seconds it is killed and a new worker is spawned
