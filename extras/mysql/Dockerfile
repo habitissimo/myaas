@@ -18,4 +18,4 @@ ENTRYPOINT ["custom-entrypoint.sh"]
 
 CMD ["mysqld", "--innodb-doublewrite=0"]
 
-HEALTHCHECK --interval=5s --timeout=10s --retries=3 CMD mysql --user=root --password=$MYSQL_ROOT_PASSWORD -h 127.0.0.1 -e "show databases;"
+HEALTHCHECK --start-period=30s --interval=30s --timeout=30s --retries=5 CMD mysql --connect-timeout=10 --user=root --password=$MYSQL_ROOT_PASSWORD -h 127.0.0.1 -e "show databases;"
