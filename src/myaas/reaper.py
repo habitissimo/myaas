@@ -52,27 +52,34 @@ class TtlReaper():
         db = database_class(client, template, name)
         db.remove()
 
-    def remove_expired_containers(self):
-        containers = get_myaas_containers()
-        now = datetime.utcnow()
-        for container in containers:
-            labels = container['Labels']
-            if 'com.myaas.expiresAt' not in labels:
-                continue
-            expires_at = labels['com.myaas.expiresAt']
-            expires_at = datetime.utcfromtimestamp(float(expires_at))
-            template= labels['com.myaas.template']
-            name = labels['com.myaas.instance']
-            if now >= expires_at:
+    def _expired(self, container):
+        if 'com.myaas.expiresAt' in container['Labels']:
+            expiry_ts = round(float(container['Labels']['com.myaas.expiresAt']))  # noqa
+        else:
+            # asume a 24 hours TTL
+            expiry_ts = int(container['Created']) + 86400
+
+        return datetime.utcnow() >= datetime.utcfromtimestamp(expiry_ts)
+
+    def _exited(self, container):
+        return container['State'] == 'exited'
+
+    def cleanup_containers(self):
+        for c in get_myaas_containers():
+            template = c['Labels']['com.myaas.template']
+            name = c['Labels']['com.myaas.instance']
+
+            if self._exited(c) or self._expired(c):
                 try:
                     self.remove_container(template, name)
                 except Exception as e:
-                    logger.exception(f"Failed to remove container {template} {name}")
+                    logger.exception(
+                        f"Failed to remove container {template} {name}")
 
     def start(self):
         logger.info("Starting myaas ttl reaper...")
         while self.sighandler.should_run:
-            self.remove_expired_containers()
+            self.cleanup_containers()
             sleep(10)
 
     def __call__(self):
