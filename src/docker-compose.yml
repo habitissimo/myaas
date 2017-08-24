@@ -8,7 +8,8 @@ services:
     links:
       - myaas
       - gui
-  myaas_base:
+
+  myaas:
     build: .
     image: habitissimo/myaas
     environment:
@@ -19,11 +20,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - .:/code/
       - /opt/myaas:/myaas
-  myaas:
-    extends: myaas_base
+
+
   gui:
     build: gui
     image: habitissimo/myaas-gui
-  daemon:
-    extends: myaas_base
-    entrypoint: python -m myaas.daemon
