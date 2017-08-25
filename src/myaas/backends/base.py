@@ -192,7 +192,7 @@ class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
     WAIT_MAX_TRIES = 30
     not_found_exception_class = NonExistentDatabase
 
-    def __init__(self, client, template, name, create=False, ttl=None):
+    def __init__(self, client, template, name, create=False, ttl=settings.CONTAINER_TTL):  # noqa
         container_name = self._make_container_name(template, name)
 
         super().__init__(client, container_name)
@@ -200,10 +200,8 @@ class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
         self.template = template
         self.name = name
         self.create = create
-        if isinstance(ttl, int) and ttl == 0:
-            self.ttl = 0
-        else:
-            self.ttl = ttl or settings.CONTAINER_TTL
+        self.ttl = int(ttl)
+
         if not self.container:
             if not self.create:
                 raise self.not_found_exception_class()
@@ -255,7 +253,7 @@ class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
             'com.myaas.username': self.user,
             'com.myaas.password': self.password,
         }
-        if self.ttl:
+        if self.ttl and self.ttl > 0:
             expire_at = datetime.now() + timedelta(seconds=self.ttl)
             labels.update({'com.myaas.expiresAt': str(expire_at.timestamp())})
         return labels

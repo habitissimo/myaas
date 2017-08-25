@@ -18,7 +18,7 @@ DOCKER_HOST = config('MYAAS_DOCKER_HOST',
 # All containers created by this service will have this prefix in their name
 CONTAINER_PREFIX = config('MYAAS_PREFIX', default='myaas-')
 # Default time that a container stays up, in seconds.
-CONTAINER_TTL = config('MYAAS_CONTAINER_TTL', cast=int, default=60 * 60 * 24)
+CONTAINER_TTL = config('MYAAS_CONTAINER_TTL', cast=int, default=86400)
 
 # Default docker imgage for the mysql backend
 # Currently tested with:
