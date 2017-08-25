@@ -2,11 +2,13 @@
 
 case $1 in
   "update")
-    python -m myaas.update
+    shift
+    python -m myaas.update $@
     exit 0
   ;;
   "reaper")
-    python -m myaas.reaper
+    shift
+    python -m myaas.reaper $@
     exit 0
   ;;
 esac
