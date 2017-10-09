@@ -13,9 +13,17 @@ from .utils.retry import RetryPolicy
 from .backends.exceptions import NonExistentTemplate, ImportDataError
 
 
-def list_dump_files():
-    files_in_dir = os.listdir(settings.DUMP_DIR)
-    return filter(lambda x: x.endswith('.sql'), files_in_dir)
+def list_dump_dirs():
+    return filter(is_mydumper_dir, os.listdir(settings.DUMP_DIR))
+
+
+def is_mydumper_dir(dir):
+    path = os.path.join(settings.DUMP_DIR, dir)
+
+    return (
+        os.path.isdir(path) and
+        all([x.endswith('.sql.gz') or x == 'metadata' for x in os.listdir(path)])
+    )
 
 
 def indent(string, level=1):
@@ -78,23 +86,18 @@ def start_template_database(db_name):
 
 
 def main():
-    dumps = list_dump_files()
+    dumps = list_dump_dirs()
     for dump in dumps:
-        db_name = dump[:-4]  # strip .sql from the name
-        sql_file = os.path.join(settings.DUMP_DIR, dump)
+        dump_dir = os.path.join(settings.DUMP_DIR, dump)
 
-        if is_empty(sql_file):
-            print(f"- Skipping: {sql_file} is empty")
-            continue
-
-        start_db_func = functools.partial(start_template_database, db_name)
+        start_db_func = functools.partial(start_template_database, dump)
         db = RetryPolicy(5, delay=2)(start_db_func)
         if not db:
             continue  # skip to next database to import
 
         print(indent("* Importing data..."))
         try:
-            db.import_data(sql_file)
+            db.import_data(dump_dir)
             db.remove_backup()
         except ImportDataError:
             print(indent("* An error happened, debug information:", level=2))

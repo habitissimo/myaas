@@ -60,12 +60,11 @@ class Template(Database, AbstractDatabaseTemplate):
     def database_backend(self):
         return Database
 
-    def import_data(self, sql_file):
-        mysql_command = self._build_mysql_command()
-        with open(sql_file, 'r') as f:
-            out, err = self._run_command(mysql_command, stdin=f)
-            if err:
-                raise ImportDataError(err)
+    def import_data(self, sql_dir):
+        myloader_command = self._build_myloader_command(sql_dir)
+        out, err = self._run_command(myloader_command)
+        if err:
+            raise ImportDataError(err)
 
     def get_engine_status(self):
         mysql_command = self._build_mysql_command()
@@ -81,3 +80,12 @@ class Template(Database, AbstractDatabaseTemplate):
                 "--host={}".format(self.internal_ip),
                 "--port={}".format(self.service_port),
                 self.database]
+
+    def _build_myloader_command(self, dump_dir=None):
+        return ["myloader",
+                "-h", self.internal_ip,
+                "-B", self.database,
+                "-u", "root",
+                "-p", self.password,
+                "-d", dump_dir,
+                "--threads", "8", "--compress-protocol", "-o"]
