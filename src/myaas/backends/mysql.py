@@ -81,11 +81,13 @@ class Template(Database, AbstractDatabaseTemplate):
                 "--port={}".format(self.service_port),
                 self.database]
 
-    def _build_myloader_command(self, dump_dir=None):
+    def _build_myloader_command(self, dump_dir=None, threads=2):
         return ["myloader",
                 "-h", self.internal_ip,
                 "-B", self.database,
                 "-u", "root",
                 "-p", self.password,
                 "-d", dump_dir,
-                "--threads", "8", "--compress-protocol", "-o"]
+                "--threads", threads,
+                "--compress-protocol",
+                "-o"]
