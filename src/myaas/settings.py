@@ -28,6 +28,11 @@ CONTAINER_TTL = config('MYAAS_CONTAINER_TTL', cast=int, default=86400)
 MYSQL_IMAGE = config("MYAAS_MYSQL_IMAGE", default="habitissimo/myaas-mysql:10.1.23")
 POSTGRES_IMAGE = config("MYAAS_POSTGRES_IMAGE", default="postgres:9.4")
 
+MYSQL_USE_MYLOADER = (
+    config("MYSQL_USE_MYLOADER", default=False, cast=bool) and
+    BACKEND == "myaas.backends.mysql"
+)
+
 DB_DATABASE = config("MYAAS_DB_DATABASE", default='default')
 DB_USERNAME = config("MYAAS_DB_USERNAME", default='myaas')
 DB_PASSWORD = config("MYAAS_DB_PASSWORD", default='myaas')

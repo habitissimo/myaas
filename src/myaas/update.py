@@ -13,12 +13,17 @@ from .utils.retry import RetryPolicy
 from .backends.exceptions import NonExistentTemplate, ImportDataError
 
 
-def list_dump_dirs():
-    return filter(is_mydumper_dir, os.listdir(settings.DUMP_DIR))
+def list_dump_files():
+    files_in_dir = os.listdir(settings.DUMP_DIR)
+
+    if settings.MYSQL_USE_MYLOADER:
+        return filter(is_mydumper_dir, files_in_dir)
+
+    return filter(lambda x: x.endswith('.sql'), files_in_dir)
 
 
-def is_mydumper_dir(dir):
-    path = os.path.join(settings.DUMP_DIR, dir)
+def is_mydumper_dir(directory):
+    path = os.path.join(settings.DUMP_DIR, directory)
 
     return (
         os.path.isdir(path) and
@@ -85,19 +90,30 @@ def start_template_database(db_name):
         raise e
 
 
-def main():
-    dumps = list_dump_dirs()
-    for dump in dumps:
-        dump_dir = os.path.join(settings.DUMP_DIR, dump)
+def get_db_name(dump):
+    if settings.MYSQL_USE_MYLOADER:
+        return dump
 
-        start_db_func = functools.partial(start_template_database, dump)
+    return dump[:-4]    # strip .sql from the name
+
+
+def main():
+    dumps = list_dump_files()
+    for dump in dumps:
+        sql_backup = os.path.join(settings.DUMP_DIR, dump)
+
+        if is_empty(sql_backup):
+            print(f"- Skipping: {sql_backup} is empty")
+            continue
+
+        start_db_func = functools.partial(start_template_database, get_db_name(dump))
         db = RetryPolicy(5, delay=2)(start_db_func)
         if not db:
             continue  # skip to next database to import
 
         print(indent("* Importing data..."))
         try:
-            db.import_data(dump_dir)
+            db.import_data(sql_backup)
             db.remove_backup()
         except ImportDataError:
             print(indent("* An error happened, debug information:", level=2))

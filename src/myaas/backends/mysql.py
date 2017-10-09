@@ -60,11 +60,24 @@ class Template(Database, AbstractDatabaseTemplate):
     def database_backend(self):
         return Database
 
-    def import_data(self, sql_dir):
+    def import_data(self, sql_backup):
+        if settings.MYSQL_USE_MYLOADER:
+            self._load_with_myloader(sql_backup)
+        else:
+            self._load_with_mysql_client(sql_backup)
+
+    def _load_with_myloader(self, sql_dir):
         myloader_command = self._build_myloader_command(sql_dir)
         out, err = self._run_command(myloader_command)
         if err:
             raise ImportDataError(err)
+
+    def _load_with_mysql_client(self, sql_file):
+        mysql_command = self._build_mysql_command()
+        with open(sql_file, 'r') as f:
+            out, err = self._run_command(mysql_command, stdin=f)
+            if err:
+                raise ImportDataError(err)
 
     def get_engine_status(self):
         mysql_command = self._build_mysql_command()
@@ -81,13 +94,13 @@ class Template(Database, AbstractDatabaseTemplate):
                 "--port={}".format(self.service_port),
                 self.database]
 
-    def _build_myloader_command(self, dump_dir=None, threads=2):
+    def _build_myloader_command(self, sql_dir, threads=2):
         return ["myloader",
                 "-h", self.internal_ip,
                 "-B", self.database,
                 "-u", "root",
                 "-p", self.password,
-                "-d", dump_dir,
-                "--threads", threads,
+                "-d", sql_dir,
+                "--threads", str(threads),
                 "--compress-protocol",
                 "-o"]
