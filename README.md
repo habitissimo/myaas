@@ -42,25 +42,25 @@ In this directory two btrfs subvolumes are expected to exist:
     - `data`, where the templates datadirs will be copied for each myaas instance
 
 ```bash
-export BASE_DIR=/srv/myaas
-mkdir $BASE_DIR
+ $ export BASE_DIR=/srv/myaas
+ $ mkdir $BASE_DIR
 
-btrfs subvolume create $BASE_DIR/dumps
-btrfs subvolume create $BASE_DIR/data
+ $ btrfs subvolume create $BASE_DIR/dumps
+ $ btrfs subvolume create $BASE_DIR/data
 ```
 
 Now we can put some sql backup in the `dumps` dir.
 
 ```bash
-echo "create table test (id int, name varchar(32));" >> $BASE_DIR/dumps/test_db.sql
-echo "insert into test values (1, 'alice'); insert into test values (2, 'bob');" >> $BASE_DIR/dumps/test_db.sql
+ $ echo "create table test (id int, name varchar(32));" >> $BASE_DIR/dumps/test_db.sql
+ $ echo "insert into test values (1, 'alice'); insert into test values (2, 'bob');" >> $BASE_DIR/dumps/test_db.sql
 ```
 
 Pull the docker image to be used as base, and run the updater to create a base template from the sql file.
 
 ```
-docker pull mariadb:10
-docker run --rm --name=myaas-updater \
+ $ docker pull mariadb:10
+ $ docker run --rm --name=myaas-updater \
   -v "/var/run/docker.sock:/var/run/docker.sock" \
   -v "/srv/myaas:/myaas" \
   -e "MYAAS_DB_DATABASE=default" \
@@ -70,6 +70,7 @@ docker run --rm --name=myaas-updater \
   --privileged \
   --no-healthcheck \
   habitissimo/myaas:devel update
+
 - Creating database test_db
   * Starting database...
   * Started
@@ -82,7 +83,7 @@ docker run --rm --name=myaas-updater \
 Congrats, you have create your first database template! Now you can expose to your development team via a simple API:
 
 ```
-docker run --name myaas -d \
+ $ docker run --name myaas -d \
   --restart=on-failure:10 \
   -v "/var/run/docker.sock:/var/run/docker.sock" \
   -v "/srv/myaas:/myaas" \
@@ -99,16 +100,14 @@ docker run --name myaas -d \
 An example using [httpie](https://httpie.org/) to interact with the API, and the mysql client to connect to a recently created db instance:
 
 ```
-# List the existint templates
-http --body localhost:5001/templates
+ $ http --body localhost:5001/templates
 {
     "templates": [
         "test_db"
     ]
 }
 
-# Create a new db
-http POST localhost:5001/db/test_db/newdb ttl:=3600
+ $ http POST localhost:5001/db/test_db/newdb ttl:=3600
 HTTP/1.1 201 CREATED
 Connection: close
 Content-Length: 248
@@ -129,7 +128,7 @@ Server: gunicorn/19.3.0
     "user": "root"
 }
 
-mysql -uroot -psecret --host=0.0.0.0 --port=47327 default
+ $ mysql -uroot -psecret --host=0.0.0.0 --port=47327 default
 MariaDB [default]> select * from test;
 +------+-------+
 | id   | name  |
