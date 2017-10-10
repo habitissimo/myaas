@@ -31,6 +31,115 @@ for a new mysql docker instance launched for this user. As the operation is perf
 
 Finally the service responds with access data required to use the database.
 
+## Quickstart
+
+You could find more info at dockerhub [image documentation](https://hub.docker.com/r/habitissimo/myaas/).
+
+The project needs a datadir over a [btrfs](https://en.wikipedia.org/wiki/Btrfs) filesystem. In this case we will create it at `/srv/myaas`.
+
+In this directory two btrfs subvolumes are expected to exist:
+    - `dumps`, where myaas will look for the sql backups to be converted into templates, and
+    - `data`, where the templates datadirs will be copied for each myaas instance
+
+```bash
+export BASE_DIR=/srv/myaas
+mkdir $BASE_DIR
+
+btrfs subvolume create $BASE_DIR/dumps
+btrfs subvolume create $BASE_DIR/data
+```
+
+Now we can put some sql backup in the `dumps` dir.
+
+```bash
+echo "create table test (id int, name varchar(32));" >> $BASE_DIR/dumps/test_db.sql
+echo "insert into test values (1, 'alice'); insert into test values (2, 'bob');" >> $BASE_DIR/dumps/test_db.sql
+```
+
+Pull the docker image to be used as base, and run the updater to create a base template from the sql file.
+
+```
+docker pull mariadb:10
+docker run --rm --name=myaas-updater \
+  -v "/var/run/docker.sock:/var/run/docker.sock" \
+  -v "/srv/myaas:/myaas" \
+  -e "MYAAS_DB_DATABASE=default" \
+  -e "MYAAS_DB_USERNAME=root" \
+  -e "MYAAS_DB_PASSWORD=secret" \
+  -e "MYAAS_MYSQL_IMAGE=mariadb:10" \
+  --privileged \
+  --no-healthcheck \
+  habitissimo/myaas:devel update
+- Creating database test_db
+  * Starting database...
+  * Started
+  * Waiting for database to accept connections
+  * Importing data...
+  * Stopping database...
+  * Stopped
+```
+
+Congrats, you have create your first database template! Now you can expose to your development team via a simple API:
+
+```
+docker run --name myaas -d \
+  --restart=on-failure:10 \
+  -v "/var/run/docker.sock:/var/run/docker.sock" \
+  -v "/srv/myaas:/myaas" \
+  -p 5001:80 \
+  -e "MYAAS_MYSQL_IMAGE=mariadb:10" \
+  -e "MYAAS_HOSTNAME=localhost" \
+  -e "MYAAS_DB_DATABASE=default" \
+  -e "MYAAS_DB_USERNAME=root" \
+  -e "MYAAS_DB_PASSWORD=secret" \
+  --privileged \
+  habitissimo/myaas
+```
+
+An example using [httpie](https://httpie.org/) to interact with the API, and the mysql client to connect to a recently created db instance:
+
+```
+# List the existint templates
+http --body localhost:5001/templates
+{
+    "templates": [
+        "test_db"
+    ]
+}
+
+# Create a new db
+http POST localhost:5001/db/test_db/newdb ttl:=3600
+HTTP/1.1 201 CREATED
+Connection: close
+Content-Length: 248
+Content-Type: application/json
+Date: Tue, 10 Oct 2017 08:24:17 GMT
+Server: gunicorn/19.3.0
+
+{
+    "created": 1507623857,
+    "database": "default",
+    "expires_at": "1507627457.012895",
+    "host": "localhost",
+    "name": "newdb",
+    "password": "secret",
+    "port": "47327",
+    "running": true,
+    "status": "Up Less than a second",
+    "user": "root"
+}
+
+mysql -uroot -psecret --host=0.0.0.0 --port=47327 default
+MariaDB [default]> select * from test;
++------+-------+
+| id   | name  |
++------+-------+
+|    1 | alice |
+|    2 | bob   |
++------+-------+
+2 rows in set (0.00 sec)
+```
+
 ## What you will find here:
 
  - **src**: myaas source [read more](db/README.md)
