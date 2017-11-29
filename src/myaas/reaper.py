@@ -116,6 +116,7 @@ def cleanup(expired, dead, unhealthy, dry_run):
     logger.info("Starting myaas ttl reaper...")
     sighandler = SignalHandler()
     while not sighandler.exit:
+        databases = cf.filter(get_myaas_containers())
         for d in databases:
             remove_database(d)
         sleep(1)
