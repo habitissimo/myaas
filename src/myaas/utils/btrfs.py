@@ -124,7 +124,7 @@ class Subvolume(object):
         self.fs = fs
 
     def __repr__(self):
-        return '<Subvolume({short_uid}, {path})>'.format(**dict(self))  # noqa
+        return f'<Subvolume({self.short_uid}, {self.path})>'
 
     def __iter__(self):
         yield from (
@@ -165,4 +165,4 @@ class Snapshot(Subvolume):
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
-        return '<Snapshot({short_uid}, {path})>'.format(**dict(self))  # noqa
+        return f'<Snapshot({self.short_uid}, {self.path})>'

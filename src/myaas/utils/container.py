@@ -10,7 +10,7 @@ client = docker.Client(base_url=settings.DOCKER_HOST)
 
 def find_container(name):
     # prepend / to name
-    name = '/{}'.format(name)
+    name = f'/{name}'
     containers = client.containers(all=True)
     containers = [c for c in containers if name in c['Names']]
     if not containers:

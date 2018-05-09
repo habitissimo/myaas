@@ -260,7 +260,7 @@ class AbstractDatabase(PersistentContainerService, metaclass=ABCMeta):
 
     @property
     def host_port(self):
-        port_name = '{}/tcp'.format(self.service_port)
+        port_name = f'{self.service_port}/tcp'
         ports = self.inspect()['NetworkSettings']['Ports']
         if not ports:
             return None

@@ -58,7 +58,7 @@ class Template(Database, AbstractDatabaseTemplate):
 
     def _build_pg_command(self):
         return ["psql",
-                "--username={}".format(self.user),
-                "--host={}".format(self.internal_ip),
-                "--port={}".format(self.service_port),
+                f"--username={self.user}",
+                f"--host={self.internal_ip}",
+                f"--port={self.service_port}",
                 self.database]

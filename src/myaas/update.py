@@ -56,7 +56,7 @@ def remove_recreate_database(template):
 
 
 def start_template_database(db_name):
-    print("- Creating database {}".format(db_name))
+    print(f"- Creating database {db_name}")
     db = remove_recreate_database(db_name)
 
     print(indent("* Starting database..."))

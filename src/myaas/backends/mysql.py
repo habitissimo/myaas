@@ -76,8 +76,8 @@ class Template(Database, AbstractDatabaseTemplate):
 
     def _build_mysql_command(self):
         return ["mysql",
-                "--user={}".format("root"),
-                "--password={}".format(self.password),
-                "--host={}".format(self.internal_ip),
-                "--port={}".format(self.service_port),
+                "--user=root",
+                f"--password={self.password}",
+                f"--host={self.internal_ip}",
+                f"--port={self.service_port}",
                 self.database]
