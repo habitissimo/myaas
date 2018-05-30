@@ -1,5 +1,7 @@
 import signal
 import logging
+import sys
+import re
 from time import sleep
 from datetime import datetime
 
@@ -38,6 +40,10 @@ class SignalHandler:
 class ContainerFilter(object):
     def __init__(self, expired=False, dead=False, unhealthy=False):
         self._expired = expired
+        self._regex = False
+        if isinstance(expired, str):
+            self._expired = re.compile(expired)
+            self._regex = True
         self._dead = dead
         self._unhealthy = unhealthy
 
@@ -73,7 +79,13 @@ class ContainerFilter(object):
             # asume a 24 hours TTL
             expiry_ts = int(container['Created']) + 86400
 
-        return datetime.utcnow() >= datetime.utcfromtimestamp(expiry_ts)
+        expired = datetime.utcnow() >= datetime.utcfromtimestamp(expiry_ts)
+
+        if expired and self._regex:
+            container_name = container['Labels']['com.myaas.instance']
+            return bool(self._expired.match(container_name))
+
+        return expired
 
     def _is_dead(self, container):
         return container['State'] == 'exited'
@@ -96,14 +108,20 @@ def remove_database(container):
 
 @click.command()
 @click.option('-e', '--expired', is_flag=True, default=False, help='Remove expired containers.')
+@click.option('--expired-regex', default=False, help="Remove expired containers only if instance name matches regex, implies -e")
 @click.option('-d', '--dead', is_flag=True, default=False, help='Remove exited containers.')
 @click.option('-u', '--unhealthy', is_flag=True, default=False, help='Remove unhealthy containers.')
 @click.option('--dry-run', is_flag=True, default=False, help='Only print name of containers that would be removed and exit.')
-def cleanup(expired, dead, unhealthy, dry_run):
-    if not (expired or dead or unhealthy):
+def cleanup(expired, expired_regex, dead, unhealthy, dry_run):
+    if not (expired or expired_regex or dead or unhealthy):
         raise click.UsageError("at least one filter must be enabled, use --help for more information")
 
-    cf = ContainerFilter(expired, dead, unhealthy)
+    try:
+        cf = ContainerFilter(expired_regex or expired, dead, unhealthy)
+    except re.error:
+        click.echo(click.style("regex is not valid", fg="red"))
+        sys.exit(1)
+
     databases = cf.filter(get_myaas_containers())
 
     if dry_run:
