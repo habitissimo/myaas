@@ -58,3 +58,5 @@ BASE_DIR = config('MYAAS_BASE_DIR', default='/myaas')
 
 DATA_DIR = BASE_DIR + "/data"
 DUMP_DIR = BASE_DIR + "/dumps"
+
+SENTRY_DSN = config('SENTRY_DSN', cast=str, default='')
