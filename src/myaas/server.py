@@ -3,7 +3,7 @@ import os
 
 from flask import Flask, Response, request, jsonify, abort
 
-from .settings import HOSTNAME, DEBUG
+from .settings import HOSTNAME, DEBUG, CONTAINER_TTL
 from .utils.container import client
 from .utils.database import (get_myaas_containers, get_enabled_backend,
                              list_databases, list_database_templates)
@@ -86,8 +86,7 @@ def create_database(template, name):
     json_ttl = request.get_json(silent=True)
     json_ttl = json_ttl.get("ttl") if json_ttl else None
     ttl = form_ttl or json_ttl
-    if ttl:
-        ttl = int(ttl)
+    ttl = int(ttl) if ttl else CONTAINER_TTL
     database_class = get_enabled_backend().Database
     try:
         db = database_class(client, template, name)
