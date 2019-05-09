@@ -37,7 +37,7 @@ innodb_fast_shutdown = 0
 
 ### Emulate 10.1 defaults ###
 #innodb_strict_mode = off
-#sql_mode = NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+sql_mode = NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
 #innodb_buffer_pool_dump_at_shutdown = OFF
 #innodb_buffer_pool_load_at_startup = OFF
 #innodb_autoinc_lock_mode = 1

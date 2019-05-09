@@ -1,4 +1,4 @@
-FROM mariadb:10.1.23
+FROM mariadb:10.4.4
 MAINTAINER Hugo Chinchilla <hchinchilla@habitissimo.com>
 
 # Install cgget command
