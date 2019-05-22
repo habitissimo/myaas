@@ -83,6 +83,8 @@ You can provide some configuration parameters trough environemnt variables.
  * **MYAAS_CPU_PINNING_CORES**: Pin every container this number of CPUS. (InnoDB doesn't handle very well having more than 8 cores available, when used on a system with many cores this increases performance).
    * Defautl value: `2` (0 to disable)
 
+ * **MYAAS_CPU_MAP**: For NUMA servers, define groups of cores to be used together, each core id separated by comma, groups separated by a colon, example `2,14:4,16:6,18:8,20:10,22:1,13:3,15:5,17:7,19:9,21:11,23`. This option overrides MYAAS_CPU_PINNING_CORES, the number of cores will be defined by the size of the groups provided in the map.
+
 ## Optional
 
  * **MYAAS_DEBUG**: print debug logs to stdout.

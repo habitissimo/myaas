@@ -2,6 +2,7 @@ import docker
 from os import getenv
 from multiprocessing import cpu_count
 from random import sample as random_sample
+from collections import Counter
 
 from .. import settings
 
@@ -43,3 +44,14 @@ def get_random_cpuset(cores_to_assign):
     available_cores = cpu_count()
     random_cores = random_sample(range(available_cores), cores_to_assign)
     return ",".join(map(str, random_cores))
+
+def get_mapped_cpuset():
+    # fake a static variable
+    if 'cnt' not in get_mapped_cpuset.__dict__:
+        cpu_map = settings.CPU_MAP.split(':')
+        get_mapped_cpuset.cnt = Counter(cpu_map)
+
+    least_used = get_mapped_cpuset.cnt.most_common()[-1][0]
+    get_mapped_cpuset.cnt[least_used] += 1
+
+    return least_used

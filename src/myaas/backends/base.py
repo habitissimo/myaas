@@ -8,7 +8,10 @@ from datetime import datetime, timedelta
 import docker
 
 from .. import settings
-from ..utils.container import find_container, translate_host_basedir, get_random_cpuset
+from ..utils.container import (
+    find_container, translate_host_basedir,
+    get_random_cpuset, get_mapped_cpuset
+)
 from ..utils.socket import reserve_port, test_tcp_connection
 from ..utils.btrfs import FileSystem
 
@@ -47,6 +50,8 @@ class ContainerService():
 
     @property
     def cpuset(self):
+        if settings.CPU_MAP:
+            return get_mapped_cpuset()
         if not settings.CPU_PINNING_INSTANCE_CORES == 0:
             return get_random_cpuset(settings.CPU_PINNING_INSTANCE_CORES)
         return None

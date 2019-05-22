@@ -60,3 +60,5 @@ DATA_DIR = BASE_DIR + "/data"
 DUMP_DIR = BASE_DIR + "/dumps"
 
 SENTRY_DSN = config('SENTRY_DSN', cast=str, default='')
+
+CPU_MAP = config('MYAAS_CPU_MAP', default=None)
