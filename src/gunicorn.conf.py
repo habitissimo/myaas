@@ -22,7 +22,7 @@ backlog = 128
 #       range. You'll want to vary this a bit to find the best
 #       for your particular application's work load.
 #
-workers = multiprocessing.cpu_count() * 2 + 1
+workers = min(multiprocessing.cpu_count(), 8) * 2 + 1
 #
 #   worker_class - The type of workers to use. The default
 #       sync class should handle most 'normal' types of work
