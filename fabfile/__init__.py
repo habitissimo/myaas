@@ -18,12 +18,12 @@ def load_dotenv():
         dotenv.load_dotenv(dotenv_file)
 
 def check_conf():
-    if not env.db_multiplexer_url:
+    if not env.myaas_url:
         print "DB_URL environment variables is not defined."
         import sys
         sys.exit(1)
 
 load_dotenv()
-env.db_multiplexer_url = os.getenv('DB_URL')
+env.myaas_url = os.getenv('DB_URL')
 check_conf()
 db = DBProvider().expose_as_module('db')

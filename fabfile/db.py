@@ -54,7 +54,7 @@ class DBApiClient(object):
 
 class DBProvider(TaskSet):
     def __init__(self):
-        self.client = DBApiClient(env.db_multiplexer_url)
+        self.client = DBApiClient(env.myaas_url)
 
     @task_method
     def new(self, template, name):

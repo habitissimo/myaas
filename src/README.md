@@ -29,7 +29,7 @@ To setup this service you only need to pull the image and run it.
 
 docker pull habitissimo/myaas-mysql:10.1
 
-# create the multiplexer instance
+# create the myaas instance
 
 docker run -d --name=myaas \
  -p 5001:5001 \
