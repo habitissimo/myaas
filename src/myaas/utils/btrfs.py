@@ -81,6 +81,14 @@ class FileSystem(object):
                 return subvolume
         return None
 
+    def find_subvolume_by_prefix(self, prefix):
+        found = []
+        for subvolume in self.subvolumes:
+            if subvolume.name.startswith(prefix):
+                found.append(subvolume)
+
+        return found
+
     def find_subvolume_by_uid(self, uid):
         for subvolume in self.subvolumes:
             if subvolume.uid == uid:
@@ -113,6 +121,8 @@ class FileSystem(object):
             sh.btrfs.subvolume.delete(path)
         except sh.ErrorReturnCode_1 as e:
             stderr = e.stderr.decode('utf-8')
+            if 'No such file or directory' in stderr:
+                return
             raise BtrfsError(stderr)
 
 
@@ -151,7 +161,17 @@ class Subvolume(object):
 
     @property
     def subvolumes(self):
-        return get_subvolumes(self.path, self.fs)
+        return self.fs.find_subvolume_by_prefix(f"{self.name}/")
+
+    def delete(self):
+        for vol in self.subvolumes:
+            vol.delete()
+
+        try:
+            sh.btrfs.subvolume.delete(self.path)
+        except sh.ErrorReturnCode_1 as e:
+            stderr = e.stderr.decode('utf-8')
+            raise BtrfsError(stderr)
 
     def take_snapshot(self, name):
         path = os.path.join(self.fs.mountpoint, name)

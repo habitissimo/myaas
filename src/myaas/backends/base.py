@@ -330,6 +330,13 @@ class AbstractDatabaseTemplate(AbstractDatabase):
             name, create=True, ttl=ttl)
 
         fs = FileSystem(settings.DATA_DIR)
+
+        print("Search pre-existent {}".format(database.container_name))
+        pre_existent_volume = fs.find_subvolume_by_name(database.container_name)
+        if pre_existent_volume:
+            pre_existent_volume.delete()
+
+        print("Cloning {}".format(self.container_name))
         subvolume = fs.find_subvolume_by_name(self.container_name)
         subvolume.take_snapshot(database.host_datadir)
 
