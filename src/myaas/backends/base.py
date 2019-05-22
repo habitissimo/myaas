@@ -5,6 +5,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from os.path import isdir, join as join_path
 from time import sleep
 from datetime import datetime, timedelta
+import docker
 
 from .. import settings
 from ..utils.container import find_container, translate_host_basedir, get_random_cpuset
@@ -80,7 +81,15 @@ class ContainerService():
         if self.running():
             self.stop()
 
-        self.client.remove_container(self.container, v=True, force=True)
+        try:
+            self.client.remove_container(self.container, v=True, force=True)
+        except docker.errors.NotFound:
+            # the reaper may already have kicked in to delete the stoped container
+            pass
+        except docker.errors.APIError:
+            # removal already in progress
+            pass
+
         self.container = None
 
     def inspect(self):
