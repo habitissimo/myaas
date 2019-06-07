@@ -107,12 +107,12 @@ def create_database(template, name):
     except ImportInProgress:
         logger.error(f'requested template "{template}" not available, import in progress')
         response = jsonify(status="Database not available, content is being imported.")
-        response.status_code = 500
+        response.status_code = 423
         return response
     except NonExistentTemplate:
         logger.error(f'requested template "{template}" not found')
         response = jsonify(status=f'Template "{template}" does not exist.')
-        response.status_code = 500
+        response.status_code = 404
         return response
 
     response = inspect_database(template, name)
