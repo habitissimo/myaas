@@ -4,6 +4,7 @@ import traceback
 import functools
 
 from docker.errors import NotFound as ImageNotFound
+from sentry_sdk import init, capture_message, configure_scope
 
 from . import settings
 from .utils.container import client
@@ -21,12 +22,6 @@ def list_dump_files():
 def indent(string, level=1):
     spacing = "  " * level
     return spacing + string
-
-
-def print_exception():
-    print('-' * 80)
-    traceback.print_exc(file=sys.stderr)
-    print('-' * 80)
 
 
 def remove_recreate_database(template):
@@ -80,7 +75,7 @@ def start_template_database(db_name):
 def main():
     dumps = list_dump_files()
     for dump in dumps:
-        db_name = dump[:-4]  # strip .sql from the name
+        db_name = dump.rstrip('.sql')
         sql_file = os.path.join(settings.DUMP_DIR, dump)
 
         if is_empty(sql_file):
@@ -95,15 +90,18 @@ def main():
         print(indent("* Importing data..."))
         try:
             db.import_data(sql_file)
-            db.remove_backup()
-        except ImportDataError:
+        except ImportDataError, Exception as e:
+            with configure_scope() as scope:
+                scope.set_extra("engine_status", db.get_engine_status())
+                scope.set_tag('database', db_name)
+                capture_message(e)
             print(indent("* An error happened, debug information:", level=2))
             print(db.get_engine_status(), file=sys.stderr)
             print(indent("* Restoring previous database", level=2))
             db.stop()
             db.restore_backup()
-            print_exception()
-            continue
+        finally:
+            db.remove_backup()
 
         print(indent("* Stopping database..."))
         db.stop()
@@ -111,4 +109,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    init(settings.SENTRY_DSN)
+    try:
+        main()
+    except Exception as e:
+        capture_message(e)
