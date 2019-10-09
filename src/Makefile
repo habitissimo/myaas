@@ -1,7 +1,8 @@
 test=''
 CWD:= $(shell pwd)
 HOSTNAME := $(shell hostname -i)
-IMAGE=habitissimo/myaas:devel
+TAG ?= devel
+IMAGE=habitissimo/myaas:$(TAG)
 DOCKER_RUN_FLAGS = --rm -e "MYAAS_HOSTNAME=$(HOSTNAME)"
 run     : DOCKER_RUN_FLAGS += -p 5001:80 --name=dbm-server
 dev     : DOCKER_RUN_FLAGS += -p 5001:80 -v "$(PWD):/code" -e "DEBUG=True" --name=myaas-server-dev
