@@ -90,7 +90,7 @@ def main():
         print(indent("* Importing data..."))
         try:
             db.import_data(sql_file)
-        except ImportDataError, Exception as e:
+        except (ImportDataError, Exception) as e:
             with configure_scope() as scope:
                 scope.set_extra("engine_status", db.get_engine_status())
                 scope.set_tag('database', db_name)
