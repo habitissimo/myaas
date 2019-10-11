@@ -75,7 +75,7 @@ def start_template_database(db_name):
 def main():
     dumps = list_dump_files()
     for dump in dumps:
-        db_name = dump.rstrip('.sql')
+        db_name,_ = os.path.splitext(dump)
         sql_file = os.path.join(settings.DUMP_DIR, dump)
 
         if is_empty(sql_file):
