@@ -7,4 +7,4 @@ gunicorn>=19.5.0,<20
 python-decouple==3.0
 sh
 click
-raven[flask]
+sentry_sdk[flask]
