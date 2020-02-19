@@ -50,3 +50,4 @@ Look for [MysqlDatabase adapter](src/myaas/backends/mysql.py) to have an idea of
 ## Support
 
 If you have problems using this service [open an issue](../../Habitissimo/myass/issues).
+Jola.
