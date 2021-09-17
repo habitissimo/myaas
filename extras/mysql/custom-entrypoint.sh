@@ -5,4 +5,4 @@
 . /docker-entrypoint-initdb.d/configure-memory.sh
 
 # now execute original entrypoint as ususal
-. docker-entrypoint.sh "$@"
+docker-entrypoint.sh $@
